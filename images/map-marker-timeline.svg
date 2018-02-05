@@ -1,0 +1,7 @@
+<svg width="400" height="580" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <g>
+  <title>Layer 1</title>
+  <path d="m60,20c-40,0 -40,0 -40,40l0,280c0,40 0,40 40,40l40,0l100,162l100,-162l40,0c40,0 40,0 40,-40l0,-280c0,-40 0,-40 -40,-40l-280,0l90,0l-90,0z" stroke-width="40" stroke="#a38e03" fill="#a38e03" id="svg_1"/>
+  <rect height="320" width="320" y="40" x="40" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke="#a38e03" fill="#dddddd" id="svg_2"/>
+ </g>
+</svg>

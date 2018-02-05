@@ -1,0 +1,143 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Nov 25, 2014, 10:57:37 PM
+    Author     : carlos
+*/
+
+/* resets */
+/*
+*,
+*:before,
+*:after {
+    box-sizing: border-box;
+}
+.clearfix:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+*/
+
+/* grid */
+[class*="row-"] {
+    margin-bottom: 20px;
+}
+[class*="row-"]:last-child {
+    margin-bottom: 0;
+}
+[class*="col-"] {
+}
+
+@media all and ( min-width: 768px ) { 
+
+    /* all cols margin */
+    [class*="col-"] {
+        margin-right: 20px;
+    }
+    [class*="col-"]:last-child {
+        margin-right: 0;
+    }
+
+    /* make the columns responsive */
+    .col-1-2 {
+        float: left;
+        width: 50%;
+        heigh: 50%;
+    }
+
+    /* 2 span rows */
+    .row-2 {
+        padding-left: 20px;
+    }
+    .row-2 [class*="col-"]:first-child {
+        margin-left: -20px;
+    }
+}
+
+/* Menu*/
+#amtechConsole\:j_idt41_content, #amtechConsole\:j_idt41{
+ padding: 0px 0px 0px 0px !important;
+ }
+ 
+/* This content css defintion */
+#amtechConsole\:mainContent {
+    /* clear: both; */
+    width: 100%;
+    height: 100%;
+    xborder: 1px solid red !important;
+    min-width: 300px;
+    display: block;
+    overflow: relative;
+
+}
+#amtechConsole\:mainContent > div {
+    width: 50%;
+    height: 25%;
+    float: left;
+    display:flex;
+    display: -webkit-flex;
+    align-items: center;
+    }
+#treeContent {
+     height:100% !important;     
+}
+#mapContent {
+     height:50% !important;     
+}
+#amtechConsole\:mainContent > div > *:first-child {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 99%;
+    height: 99%;
+    padding-bottom: 5px;
+    border: 1px solid grey;
+    background-color: E3E3E3;
+}
+#treeContent > *:first-child {
+     width:100% !important;     
+}
+body, html {
+    height: 100%;
+    position: relative;
+}
+
+.width100 {
+    width: 100% !important;
+}
+
+.width50 {
+    width: 50% !important;
+}
+footer { display:none;}
+
+@media (min-width: 10px) and (max-width: 568px) {
+
+    .width50 {
+        clear: both;
+        xborder:1px solid blue;
+        width: 100% !important;
+    }
+    #treeContent {
+        
+        height:auto !important;
+    }
+    
+    #amtechConsole\:mainContent {
+        width: 100%;
+        height: auto !important;
+    }
+}
+
+#amtechConsole {
+    height: 100%;
+}
+
+.amtech-ui-button span {
+    display: inline;
+    font-size: 12px;
+}

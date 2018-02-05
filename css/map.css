@@ -1,0 +1,301 @@
+/*
+ *  Copyright (c) 2014-2014 amTech
+ *  *
+ *  * This file is subject to the terms and conditions defined in file 'LICENSE',
+ *  * which is part of this source code package.
+ */
+.map-container {
+    height: 99%;
+    z-index:70;
+}
+
+.custom-popup .leaflet-popup-content-wrapper {
+    background: #2c3e50;
+    color: #fff;
+    font-size: 16px;
+    line-height: 24px;
+}
+
+.custom-popup .leaflet-popup-content-wrapper a {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.custom-popup .leaflet-popup-tip-container {
+    width: 30px;
+    height: 15px;
+}
+
+.custom-popup .leaflet-popup-tip {
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-top: 15px solid #2c3e50;
+}
+
+.map-popup-header {
+    font-size: 20px;
+}
+
+.map-popup-text {
+    font-size: 12px;
+}
+
+.map-locate-myself {
+    background-image: url("../images/flag.svg") !important;
+    background-size: cover;
+}
+
+.leaflet-control-resizer-reduce {
+    background-image: url("../images/hand-up.svg") !important;
+    background-size: 20px;
+}
+
+.leaflet-control-resizer-grow {
+    background-image: url("../images/hand-down.svg") !important;
+    background-size: 20px;
+}
+
+.map-item-hover {
+    height: 58px !important;
+    width: 40px !important;
+    margin-left: -20px !important;
+    margin-top: -58px !important;
+    fill-opacity: .5;
+}
+
+.map-item-hover div {
+    height: 32px !important;
+    width: 32px !important;
+    margin-left: 4px !important;
+    margin-top: 4px !important;
+}
+
+.map-selected-items {
+    stroke: #006600;
+    height: 58px;
+    width: 40px;
+    z-index: 900 !important;
+    margin-left: -20px;
+    margin-top: -58px;
+}
+
+.map-selected-items div {
+    height: 32px;
+    width: 32px;
+    margin-left: 4px !important;
+    margin-top: 4px !important;
+    z-index: 900 !important;
+}
+
+.map-editing {
+    height: 8px !important;
+    width: 6px !important;
+    margin-left: -3px !important;
+    margin-top: -8px !important;
+}
+
+.map-editing div {
+    height: 4px !important;
+    width: 4px !important;
+    margin-left: 1px !important;
+    margin-top: 1px !important;
+}
+
+.map-proximity-area-items {
+    stroke: #8f5902;
+    z-index: 800 !important;
+    height: 29px;
+    width: 20px;
+    margin-left: -10px;
+    margin-top: -29px;
+    stroke-width: 5;
+}
+
+.map-proximity-area-items.map-line {
+    stroke-width: 7;
+}
+
+.map-proximity-area-items.map-fill {
+    fill: #8f5902;
+    opacity: .5;
+}
+
+.map-line {
+    stroke-width: 5;
+}
+
+.map-selected-items.map-fill {
+    fill: #007f00;
+    opacity: .7;
+}
+
+.map-selected-items.map-icon-marker {
+    background-image: url("../images/map-marker-selected.svg");
+    background-size: cover;
+}
+
+.map-all-items {
+    stroke: #660000;
+    height: 29px;
+    width: 20px;
+    margin-left: -10px;
+    margin-top: -29px;
+    z-index: 850 !important;
+}
+
+.map-all-items div {
+    height: 16px;
+    width: 16px;
+    margin-left: 2px;
+    margin-top: 2px;
+    z-index: 850 !important;
+}
+
+.map-all-items.map-fill {
+    fill: #cc0000;
+    opacity: .7;
+}
+
+.map-all-items.map-icon-marker {
+    background-image: url("../images/map-marker-all.svg");
+    background-size: cover;
+}
+
+.map-item-edited {
+    stroke: #444488;
+    opacity: .7;
+    z-index: 950 !important;
+    height: 58px;
+    width: 40px;
+    margin-left: -20px;
+    margin-top: -58px;
+}
+.map-item-edited.map-item-overlay {
+    opacity: .3;
+    z-index: 955 !important;
+}
+
+.map-item-edited div {
+    height: 32px;
+    width: 32px;
+    margin-left: 4px !important;
+    margin-top: 4px !important;
+    z-index: 950 !important;
+}
+
+.map-item-edited.map-fill {
+    fill: #444488;
+    fill-opacity: .5;
+}
+
+.map-item-edited.map-icon-marker {
+    background-image: url("../images/map-marker-edit.svg");
+    background-size: cover;
+}
+
+.ui-spatial {
+    background-image: url('../images/spritesheet.png') !important;
+    background-repeat: no-repeat;
+}
+
+.ui-spatial.ui-spatial-polyline {
+    background-position: -6px -7px;
+}
+
+.ui-spatial.ui-spatial-polygon {
+    background-position: -36px -7px;
+}
+
+.ui-spatial.ui-spatial-rectangle {
+    background-position: -66px -7px;
+}
+
+.ui-spatial.ui-spatial-circle {
+    background-position: -96px -7px;
+}
+
+.ui-spatial.ui-spatial-point {
+    background-position: -126px -7px;
+}
+
+.map-timeline-path {
+    stroke: #f5e003;
+    stroke-width: 2;
+    opacity: .7;
+    z-index: 700 !important;
+}
+
+.map-timeline {
+    stroke: #a38e03;
+    opacity: .7;
+    z-index: 700 !important;
+    height: 29px;
+    width: 20px;
+    margin-left: -10px;
+    margin-top: -29px;
+}
+
+.map-timeline div {
+    height: 16px;
+    width: 16px;
+    margin-left: 2px !important;
+    margin-top: 2px !important;
+}
+
+.map-timeline.map-fill {
+    fill: #a38e03;
+    fill-opacity: .5;
+}
+
+.map-timeline.map-icon-marker {
+    background-image: url("../images/map-marker-timeline.svg");
+    background-size: cover;
+}
+
+.control-search-link {
+    color: black;
+}
+
+.control-search-link.deactivated {
+    color: "ligth-gray";
+}
+
+.leaflet-control-layers-toggle {
+    text-decoration: none;
+    line-height: 26px;
+    width: 26px;
+    height: 26px;
+    background-size: 24px;
+}
+
+.leaflet-touch .leaflet-control-layers-toggle {
+    line-height: 26px;
+    width: 26px;
+    height: 26px;
+    background-size: 24px;
+}
+
+.leaflet-control-edition-state {
+    left: 40px;
+    background-color: rgba(205, 205, 205, .8);
+    cursor: pointer;
+    display: inline-block;
+    border-radius: 5px;
+    padding: 2px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-bottom: -30px;
+    font-weight: bold;
+    border: 1px solid black;
+}
+
+.control-editstate-text {
+    float: left;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+.control-editstate-link {
+    float: left;
+    padding-left: 4px;
+    padding-right: 4px;
+}

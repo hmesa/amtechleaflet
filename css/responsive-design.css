@@ -1,0 +1,217 @@
+/* All */
+#orientation-message { 
+    display: none; 
+}
+
+/*PC devices*/
+@media only screen 
+    and (min-device-width : 1024px) {
+    .form-submit{
+        position:absolute; 
+        top:-1000px
+    }
+    #fl_menu{
+        width: 40px;
+        height: 40px;
+        top:30px;
+    }
+
+    #fl_menu .label {
+        line-height: 40px;
+        font-size: 14px;
+    }
+    #fl_menu .menu .menu_item {
+        font-size: 14px;
+    }
+}
+
+/*iPad mini*/
+@media only screen 
+and (min-device-width : 768px) 
+and (max-device-width : 1024px)
+and (orientation : landscape)
+and (-webkit-min-device-pixel-ratio: 1)  { 
+    
+    #fl_menu{
+        width: 60px;
+        height: 60px;
+        top:30px;
+    }
+
+    #fl_menu .label {
+        line-height: 60px;
+        font-size: 16px;
+    }
+    #fl_menu .menu .menu_item {
+        font-size: 16px;
+    }
+    
+}
+
+/*iPad mini*/
+@media only screen 
+and (min-device-width : 768px) 
+and (max-device-width : 1024px)
+and (orientation : portrait)
+and (-webkit-min-device-pixel-ratio: 1)  { 
+    
+    #fl_menu{
+        width: 60px;
+        height: 60px;
+        top:30px;
+    }
+
+    #fl_menu .label {
+        line-height: 60px;
+        font-size: 16px;
+    }
+    #fl_menu .menu .menu_item {
+        font-size: 16px;
+    }
+}
+
+
+/*iPhone 6 Plus*/
+@media only screen 
+    and (orientation:portrait)
+    and (min-device-width : 414px) 
+    and (max-device-width : 736px){
+        
+    #fl_menu{
+        width: 60px;
+        height: 60px;
+        top:30px;
+    }
+
+    #fl_menu .label {
+        line-height: 60px;
+        font-size: 16px;
+    }
+    #fl_menu .menu .menu_item {
+        font-size: 16px;
+    }
+ }
+@media only screen 
+and (orientation:landscape)
+and (min-device-width : 414px) 
+and (max-device-width : 736px){
+   
+    #fl_menu{
+        width: 60px;
+        height: 60px;
+        top:30px;
+    }
+
+    #fl_menu .label {
+        line-height: 60px;
+        font-size: 16px;
+    }
+    #fl_menu .menu .menu_item {
+        font-size: 24px;
+    }
+}
+
+/*Samsung Galaxy 4 Note*/
+@media only screen 
+    and (orientation:portrait)
+    and (max-device-width : 640px)
+    and (min-device-width : 360px){ 
+    
+    #fl_menu{
+        width: 60px;
+        height: 60px;
+        top:30px;
+    }
+
+    #fl_menu .label {
+        line-height: 60px;
+        font-size: 16px;
+    }
+    #fl_menu .menu .menu_item {
+        font-size: 24px;
+    }
+}
+@media only screen 
+    and (orientation:landscape)
+    and (max-device-width : 640px)
+    and (min-device-width : 360px){ 
+   
+    
+    #fl_menu{
+        width: 60px;
+        height: 60px;
+        top:30px;
+    }
+
+    #fl_menu .label {
+        line-height: 60px;
+        font-size: 16px;
+    }
+    #fl_menu .menu .menu_item {
+        font-size: 16px;
+    }
+}
+
+/*iPhone 5*/
+@media only screen 
+    and (orientation:portrait)
+    and (max-device-width : 568px)
+    and (min-device-width : 320px){ 
+   
+    .leaflet-control-zoom{
+        display:none;
+    }
+    #fl_menu{
+        width: 60px;
+        height: 60px;
+        top:15px;
+    }
+
+    #fl_menu .label {
+        line-height: 60px;
+        font-size: 16px;
+    }
+    #fl_menu .menu .menu_item {
+        font-size: 24px;
+    }
+ }
+@media only screen 
+    and (orientation:landscape)
+    and (max-device-width : 568px)
+    and (min-device-width : 320px){ 
+   
+    .leaflet-control-zoom{
+        display:none;
+    }
+
+    #fl_menu{
+        width: 60px;
+        height: 60px;
+        top:15px;
+    }
+
+    #fl_menu .label {
+        line-height: 60px;
+        font-size: 20px;
+    }
+
+    #fl_menu .menu .menu_item {
+        font-size: 16px;
+    }
+}
+
+/* For touch devices */
+.scrollWrapper {
+  position: fixed; 
+  right: 0; 
+  bottom: 0; 
+  left: 0;
+  top: 0;
+  -webkit-overflow-scrolling: touch;
+  overflow-y: scroll;
+}
+
+.scrollWrapper iframe {
+  height: 100%;
+  width: 100%;
+}

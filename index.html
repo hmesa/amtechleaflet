@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+
+<head>
+    <!--<meta name="viewport" content=" initial-scale = 0.5, user-scalable = no">-->
+    <meta name="viewport" content="initial-scale = 0.5, maximum-scale = 0.5, minimum-scale = 0.5, user-scalable = no">
+    <title>Amtech IoT demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="./js/tip-skyblue/tip-skyblue.css" type="text/css" />
+    <link rel="stylesheet" href="./css/main.css" type="text/css" />
+    <link rel="stylesheet" href="./css/responsive-design.css" type="text/css" />
+    <link rel="stylesheet" href="./css/leaflet.label.css" />
+    <link rel="stylesheet" href="./css/map.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
+    <style>
+        label,
+        input {
+            display: block;
+        }
+
+        input.text {
+            margin-bottom: 12px;
+            width: 95%;
+            padding: .4em;
+        }
+
+        fieldset {
+            padding: 0;
+            border: 0;
+            margin-top: 25px;
+        }
+
+        h1 {
+            font-size: 1.2em;
+            margin: .6em 0;
+        }
+
+        .ui-dialog .ui-state-error {
+            padding: .3em;
+        }
+
+        .validateTips {
+            border: 1px solid transparent;
+            padding: 0.3em;
+        }
+
+        .ui-menu {
+            width: 300px;
+        }
+    </style>
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0/leaflet-src.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <script type="text/javascript" src="./js/Leaflet.ImageOverlay.Rotated.js"></script>
+    <script type="text/javascript" src="./js/leaflet.label.js"></script>
+
+    <script type="text/javascript" src="./js/class.js" lang="js"></script>
+    <script type="text/javascript" src="./js/eventEmitter.js" lang="js"></script>
+    <script type="text/javascript" src="./js/cssSafeCodec.js" lang="js"></script>
+    <script type="text/javascript" src="./js/amtech.js" lang="js"></script>
+    <script type="text/javascript" src="./js/wktParser.js" lang="js"></script>
+    <script type="text/javascript" src="./js/imageHandler.js"></script>
+    <script type="text/javascript" src="./js/logger.js"></script>
+    <script type="text/javascript" src="./js/leafletMap.js"></script>
+
+</head>
+
+<body id='mainBody'>
+    <div id="mainContent" class="content">
+        <div id="entityCssClasses"></div>
+        <div id="mapPanel" class="map-container-panel" style="display:none;top:0px;left:0px;" closable="true">
+            <div class="map-container"></div>
+        </div>
+
+    </div>
+    <script lang="js">
+        var elements = [{
+            "@id": "/amtech/things/entities/amtechM2mBridge/bridge1",
+            "location": "{\"wkt\":\"POINT(0 0)\"}",
+            "icon": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge",
+            "_name": "bridge1"
+        }, {
+            "@id": "/amtech/things/entities/amtechM2mBridge/bridge2",
+            "location": "{\"wkt\":\"POINT(0 0)\"}",
+            "icon": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge",
+            "_name": "bridge1"
+        }, {
+            "@id": "/amtech/things/entities/BLEbeaconsScanner/bleScanner1",
+            "location": "{\"wkt\":\"POINT(0 0)\"}",
+            "icon": "/amtech/linkeddata/types/composite/entity/BLEbeaconsScanner",
+            "_name": "bleScanner1"
+        }]
+        function prepareLog(level, text) {
+            return "[" + new Date().toISOString() + "] " + level.toUpperCase() + " - " + text;
+        }
+        var logLevel = "debug";
+        var logger;
+        function createLogger(loglevel) {
+            logger = new Loggers.Logger(logLevel, (level, text) => {
+                console.log(prepareLog(level, text));
+            });
+
+        }
+        function getLogger(logLevel) {
+            if (!logger) {
+                createLogger(logLevel);
+            }
+            return logger;
+        }
+        var mapWidget;
+        function createMap() {
+            var container = $('.map-container').get(0);
+            mapWidget = new amtech.console.widget.LeafletMap({
+                id: 'amtech:map',
+                containerElement: container,
+                tileLayer: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                tileLayerOption: { attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors' },
+                widgetVar: 'mapWidget',
+                allowUserInteractionOnCoordinates: false,
+
+                withLocateMeControl: true,
+                withResizerControl: false,
+                withLayerControl: false,
+                withCoordinateControl: false,
+                withZoomControl: true,
+                withEditStateControl: false,
+
+                delayedCreation: false,
+                resizeDelay: 0,
+
+                canEdit: false,
+                canSelect: true,
+                animation: false
+
+            });
+            mapWidget.toggleChangeNotificationsActivated(false);
+            $(window).resize(() => { mapWidget.onresize() });
+            mapWidget.setLogger(getLogger().withFixExecInfo("Map", ": "));
+            //mapWidget.addEventListener(mapWidget.EVENTS.LOCATION_FOUND, setDeviceLocation);
+            //mapWidget.addEventListener(mapWidget.EVENTS.LOCATION_ERROR, showLocationError);
+        }
+
+        function getMapWidget() {
+            if (!mapWidget) {
+                createMap();
+            }
+            return mapWidget;
+        }
+
+        function showMap() {
+            $("#mapPanel").show()
+            getMapWidget().show();
+        }
+        var zoomRatio;
+        $(document).ready(function () {
+
+            zoomRatio = $(window).width() / (0.0 + screen.width);
+            getLogger().debug("window loaded. zoom ratio set to " + zoomRatio);
+
+            showMap();
+            elements.forEach((elem) => {
+                var data = {
+                    url: elem["@id"],
+                    locationJson: getMapWidget().fromOldLocation(elem.location),
+                    icon: elem["icon"],
+                    name: elem["_name"],
+                    description: elem["description"]
+                }
+                data.location =data.locationJson.wkt; 
+                getMapWidget().addElement(elem);
+            })
+        });
+    </script>
+</body>
