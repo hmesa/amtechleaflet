@@ -401,6 +401,10 @@
             if (allLayers.length > 0 || this.layerFloorplans.getLayers().length > 0) {
                 var delta_lat = .001, delta_lng = .001, s = 90, w = 180, n = -90, e = -180;
 
+                this.logger.info("MAP:  stopping user location");
+                this.__mustCenterAfterLocation = false;
+                this.map.stopLocate();
+                
                 allLayers.forEach(function (layer) {
                     var bounds = self.getLayerBounds(layer);
                     if (bounds.isValid()) {
@@ -450,9 +454,6 @@
                     e = 180;
                 }
 
-                this.logger.info("MAP:  stopping user location");
-                this.__mustCenterAfterLocation = false;
-                this.map.stopLocate();
                 this.map.fitBounds([[s, w], [n, e]], {
                     padding: [10, 10],
                     maxZoom: this.cfg.maxZoomForCentering,

@@ -7,8 +7,7 @@
     <title>Amtech IoT demo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <link rel="stylesheet" href="./js/tip-skyblue/tip-skyblue.css" type="text/css" />
-    <link rel="stylesheet" href="./css/main.css" type="text/css" />
+     <link rel="stylesheet" href="./css/main.css" type="text/css" />
     <link rel="stylesheet" href="./css/responsive-design.css" type="text/css" />
     <link rel="stylesheet" href="./css/leaflet.label.css" />
     <link rel="stylesheet" href="./css/map.css" />
@@ -23,17 +22,6 @@
             margin-bottom: 12px;
             width: 95%;
             padding: .4em;
-        }
-
-        fieldset {
-            padding: 0;
-            border: 0;
-            margin-top: 25px;
-        }
-
-        h1 {
-            font-size: 1.2em;
-            margin: .6em 0;
         }
 
         .ui-dialog .ui-state-error {
@@ -66,6 +54,9 @@
     <script type="text/javascript" src="./js/imageHandler.js"></script>
     <script type="text/javascript" src="./js/logger.js"></script>
     <script type="text/javascript" src="./js/leafletMap.js"></script>
+    <script type="text/javascript" src="./js/baseDap.js"></script>
+    <script type="text/javascript" src="./js/dap.js"></script>
+    <script type="text/javascript" src="./js/mapPromises.js"></script>
 
 </head>
 
@@ -81,19 +72,23 @@
         var elements = [{
             "@id": "/amtech/things/entities/amtechM2mBridge/bridge1",
             "location": "{\"wkt\":\"POINT(0 0)\"}",
-            "icon": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge",
+            "@type": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge",
+            "icon": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge/typesvgicon",
             "_name": "bridge1"
         }, {
             "@id": "/amtech/things/entities/amtechM2mBridge/bridge2",
             "location": "{\"wkt\":\"POINT(0 0)\"}",
-            "icon": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge",
+            "@type": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge",
+            "icon": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge/typesvgicon",
             "_name": "bridge1"
         }, {
             "@id": "/amtech/things/entities/BLEbeaconsScanner/bleScanner1",
             "location": "{\"wkt\":\"POINT(0 0)\"}",
-            "icon": "/amtech/linkeddata/types/composite/entity/BLEbeaconsScanner",
+            "@type": "/amtech/linkeddata/types/composite/entity/BLEbeaconsScanner",
+            "icon": "/amtech/linkeddata/types/composite/entity/BLEbeaconsScanner/typesvgicon",
             "_name": "bleScanner1"
-        }]
+        }];
+        //logger creation
         function prepareLog(level, text) {
             return "[" + new Date().toISOString() + "] " + level.toUpperCase() + " - " + text;
         }
@@ -111,7 +106,14 @@
             }
             return logger;
         }
+
+        //image handling 
+        var entityCssClassesDiv = $("#entityCssClasses");
+        entityCssClassesDiv.html('');
+
+        //map widget creation
         var mapWidget;
+
         function createMap() {
             var container = $('.map-container').get(0);
             mapWidget = new amtech.console.widget.LeafletMap({
@@ -155,6 +157,43 @@
             $("#mapPanel").show()
             getMapWidget().show();
         }
+
+        //dap controller definition
+        var dapClient;
+        function createDapClient() {
+            dapClient = dap.createDapClient(
+                getLogger().withFixExecInfo("DapClient", " : "),
+                config.dapUrl, config.user + "/" + config.tenant, config.password);
+        }
+        function getDapClient() {
+            if (!dapClient) {
+                createDapClient();
+            }
+            return dapClient;
+        }
+
+        //mapPromises function
+        var mapPromises;
+        function initMapPromises() {
+            getLogger().debug("initializing map promises");
+            try {
+                mapPromises = createMapPromises(getMapWidget(), getDapClient(), wktParser);
+                mapPromises.setLogger(getLogger().withFixExecInfo("MapPromises", " : "));
+
+                mapPromises.getImageHandler().setCssStyleContainerDiv(entityCssClassesDiv);
+            } catch (e) {
+                getLogger().error(e.message);
+                throw e;
+            }
+        }
+        function getMapPromises() {
+            if (!mapPromises) {
+                initMapPromises();
+            }
+            return mapPromises;
+        }
+
+
         var zoomRatio;
         $(document).ready(function () {
 
@@ -162,17 +201,9 @@
             getLogger().debug("window loaded. zoom ratio set to " + zoomRatio);
 
             showMap();
-            elements.forEach((elem) => {
-                var data = {
-                    url: elem["@id"],
-                    locationJson: getMapWidget().fromOldLocation(elem.location),
-                    icon: elem["icon"],
-                    name: elem["_name"],
-                    description: elem["description"]
-                }
-                data.location =data.locationJson.wkt; 
-                getMapWidget().addElement(elem);
-            })
+            getMapPromises().addElements(elements).then((response)=>{
+                return getMapPromises().centerToLayers(response);
+            });
         });
     </script>
 </body>

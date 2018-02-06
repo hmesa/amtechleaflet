@@ -42,93 +42,10 @@ function initAmtechObjects(window) {
             getWidget: function (id) {
                 return window.amtech.console.widgets[amtech.console.getWidgetName(id)];
             },
-
-            json: {
-                getObject: function () {
-                    return jQuery.parseJSON(this.value);
-                },
-                setObject: function (jsonObject) {
-                    this.value = JSON.stringify(jsonObject);
-                },
-                setField: function (field, value) {
-                    var jsonValue = window.amtech.console.json.getObject.call(this);
-                    if (typeof jsonValue != "Object")
-                        jsonValue = {};
-
-                    jsonValue[field] = value;
-                    window.amtech.console.json.setObject(jsonValue);
-                },
-                getField: function (field) {
-
-                    var jsonValue = window.amtech.console.json.getObject.call(this);
-                    if (typeof jsonValue != "Object")
-                        return null;
-
-                    return jsonValue[field];
-                },
-                getArrayElement: function (ind) {
-                    var jsonValue = window.amtech.console.json.getObject.call(this);
-                    if (typeof jsonValue != "Array") {
-                        jsonValue = [jsonValue];
-                        this.logger.debug("type of jsonValue: " + typeof jsonValue)
-                    }
-
-                    if (typeof ind == "undefined") {
-                        return null;
-
-                    } else {
-                        return jsonValue[ind];
-                    }
-                },
-                setArrayElement: function (ind, value) {
-                    var jsonValue = window.amtech.console.json.getObject.call(this);
-                    if (typeof jsonValue != "Array") {
-                        jsonValue = [jsonValue];
-                        this.logger.debug("type of jsonValue: " + typeof jsonValue)
-                    }
-
-                    jsonValue[ind] = value;
-                    window.amtech.console.json.setObject(jsonValue);
-                },
-                insertArrayElement: function (ind, value) {
-
-                    var jsonValue = window.amtech.console.json.getObject.call(this);
-                    if (typeof jsonValue != "Array") {
-                        jsonValue = [jsonValue];
-                        this.logger.debug("type of jsonValue: " + typeof jsonValue)
-                    }
-                    if (typeof ind == "undefined") {
-                        value = ind;
-                        jsonValue[jsonValue.length] = value;
-                    } else {
-                        jsonValue[ind] = value;
-                    }
-
-                    window.amtech.console.json.setObject(jsonValue);
-
-                },
-                removeArrayElement: function (ind) {
-                    var jsonValue = window.amtech.console.json.getObject.call(this);
-                    if (typeof jsonValue != "Array") {
-                        jsonValue = [jsonValue];
-                        this.logger.debug("type of jsonValue: " + typeof jsonValue)
-                    }
-                    if (typeof ind == "undefined" || ind < 0
-                        || ind >= jsonValue.length) {
-
-                    } else {
-                        jsonValue.remove(ind);
-                    }
-
-                    window.amtech.console.json.setObject(jsonValue);
-                },
-                clearArray: function () {
-                    this.value = "[]";
-                }
-            },
+            I18N:{},
             utils: {
                 classes: {},
-                PF_SEVERITY: {
+                SEVERITY: {
                     INFO: "info",
                     WARN: "warn",
                     ERROR: "error",
@@ -136,25 +53,6 @@ function initAmtechObjects(window) {
                 },
                 isString: function (instance) {
                     return typeof instance == "string"
-                },
-                getObject: function (instance) {
-                    if (window.amtech.console.utils.isString(instance)) {
-                        if (window.document && window.document.getElementById) {
-                            instance = document.getElementById(instance);
-                        } else {
-                            instance = undefined;
-                        }
-                    }
-                    return instance;
-                },
-                copyValue: function (source, target) {
-                    source = window.amtech.console.utils.getObject(source);
-                    target = window.amtech.console.utils.getObject(target);
-
-                    target.value = source.value;
-                },
-                copyValueTo: function (value, target) {
-                    window.amtech.console.utils.getObject(target).value = value;
                 },
                 verifyIfSuccessful: function (xhr, status, args, src) {
                     src = src || this;
@@ -192,58 +90,11 @@ function initAmtechObjects(window) {
                             message = messages[i];
                         }
                         message.severity = message.severity
-                            || window.amtech.console.utils.PF_SEVERITY.ERROR;
+                            || window.amtech.console.utils.SEVERITY.ERROR;
                         message.detail = message.detail || "";
 
                     }
                     return messages;
-                },
-                addMessageToValidationContext: function (target, messages) {
-                    messages = window.amtech.console.utils.preparePFMessages(messages);
-                    if (messages.length == 0) {
-                        return;
-                    }
-                    if (!target || target.length == 0) {
-                        console.warn("the target for the message is mandatory");
-                    }
-
-                    var vc = window.PrimeFaces.util.ValidationContext;
-
-                    if (!(target in vc.messages)) {
-                        vc.messages[target] = messages;
-                    } else {
-                        messages.forEach(function (item) {
-                            vc.messages[target].push(item);
-
-                        });
-                    }
-                },
-                renderPFMessages: function (messengerWidgetVar, messages) {
-                    messages = window.amtech.console.utils.preparePFMessages(messages);
-                    if (messages.length == 0) {
-                        return;
-                    }
-                    if (!messengerWidgetVar || !window.PF(messengerWidgetVar)) {
-                        console.warn("Invalid or empty messenger")
-                        return;
-                    }
-
-                    var messenger = window.PF(messengerWidgetVar);
-                    messages.forEach(function (item) {
-                        messenger.renderMessage(message);
-                    });
-                },
-                handleErrorMessages: function (messageId) {
-                    var vc = window.PrimeFaces.util.ValidationContext;
-                    var $messageDB = $(window.PrimeFaces.escapeClientId(messageId));
-                    if (vc.isEmpty()) {
-                        // $messageDB.find(".ui-message").html("").removeClass("ui-message-error");
-                        return true;
-                    } else {
-                        vc.renderMessages($messageDB);
-                        vc.clear();
-                        return false;
-                    }
                 },
 
                 setTimeZonedDate: function (date, timeZoneId) {
@@ -303,95 +154,19 @@ function initAmtechObjects(window) {
                         + Math.abs(h).toString() + ":"
                         + ((m < 30) ? "00" : "30");
                 }
-            },
-            messages: {},
-            getMessage: function (id) {
-                if (window.amtech.console.messages && (id in window.amtech.console.messages)) {
-                    return window.amtech.console.messages[id];
-                } else {
-                    return "??? " + id + " ???"
-                }
-            },
+            },            
             constants: {
                 PROP_TYPE: "@type",
-                PROP_OBS_PRODUCTION_CONFIG: "observationproductionconfig",
-                PROP_OBS_PRODUCTION_CONFIG_PROPS: "properties",
-                PROP_OBS_PRODUCED: "observationsproducedconfig"
-            },
-            HYDRA_TYPES: {
-                COLLECTION: "http://www.w3.org/ns/hydra/core#Collection",
-                CLASS: "http://www.w3.org/ns/hydra/core#Class",
-                STRING: "http://www.w3.org/TR/xmlschema-2/#string",
-                INTEGER: "http://www.w3.org/TR/xmlschema-2/#integer",
-                DOUBLE: "http://www.w3.org/TR/xmlschema-2/#double",
-                DATETIME: "http://www.w3.org/TR/xmlschema-2/#dateTime",
-                BOOLEAN: "http://www.w3.org/TR/xmlschema-2/#boolean"
+                PROP_ID: "@id",
+                PROP_location: "location"
             },
             PATHS: {
-                TYPE_AMTECH: "/amtech/linkeddata/types/composite/",
-                TYPE_REASONER: "/amtech/linkeddata/types/composite/reasoner",
-                TYPE_REASONER_ON_THE_EDGE: "/amtech/linkeddata/types/composite/reasonerontheedge",
                 TYPE_ENTITY: "/amtech/linkeddata/types/composite/entity",
-                TYPE_OBSERVATION: "/amtech/linkeddata/types/composite/observation",
-                TYPE_ROLE: "/amtech/linkeddata/types/composite/rolepolicy",
-                TYPE_LOCATION_BINDING: "/amtech/linkeddata/types/composite/locationbinding",
-                TYPE_GUEST_TENANTS_BINDING: "/amtech/linkeddata/types/composite/guesttenantsbinding",
-                TYPE_GUEST_USERS_BINDING: "/amtech/linkeddata/types/composite/guestusersbinding",
-                TYPE_OBS_CRUD: "/amtech/linkeddata/types/composite/observation/observationresourcecrud",
-                TYPE_EVENT_SOURCE: "/amtech/linkeddata/types/composite/eventsource",
-                SERVICES: "/amtech/services",
-                EVENT_SOURCES: "/amtech/things/eventsources",
-                ACTIVITIES: "/amtech/activities",
-                ENTITIES: "/amtech/things/entities",
-                BRIDGES: "/amtech/things/entities/amtechM2mBridge",
-                OBSERVATIONS: "/amtech/things/observations",
-                NOTIFICATIONS: "/amtech/notifications",
-                OBSERVERS: "/amtech/observers"
-            },
-            REGEX: {
-                // removed # from ENTITIES and NAMES regExps
-                OBSERVATIONS: "[a-zA-Z][a-zA-Z0-9_]+",
-                ENTITIES: "[a-zA-Z0-9]([a-zA-Z0-9_@.\\-:!'()*+,;=]|(\\%[a-fA-F0-9]{2}))*",
-                NAMES: "[a-zA-Z][a-zA-Z0-9_]+",
-                FIELD: "[a-zA-Z][a-zA-Z0-9_]+"
-            },
-            getEntityCollectionRegex: function () {
-                return new RegExp("^" + window.amtech.console.PATHS.ENTITIES
-                    + "(/[^/]*)?$");
-            },
-            encodeCssSafe: function (string) {
-                return btoa(string).replace(/\//g, '-').replace(/\+/g, '_')
-                    .replace(/=+$/g, '');
-
-            },
-            decodeCssSafe: function (string) {
-                if (!string) {
-                    return "";
-                }
-
-                var l = string.length;
-                var n = l % 4;
-                if (n != 0) {
-                    var s = [string];
-                    for (var i = 0; i < 4 - n; i++) {
-                        s.push("=");
-                    }
-                    string = s.join("");
-                }
-                return atob(string.replace(/-/g, '/').replace(/_/g, '+'));
-
+                ENTITIES: "/amtech/things/entities"
             }
 
         };
     }
-    amtechRenderPFMessages = function ($messageDB) {
-        var vc = window.PrimeFaces.util.ValidationContext;
-        if (!vc.isEmpty()) {
-            vc.renderMessages($messageDB);
-            vc.clear();
-        }
-
-    };
     if (!window.amtech.console.Base) {
         window.amtech.console.Base = Class
             .extend({
@@ -461,13 +236,7 @@ function initAmtechObjects(window) {
                         }
 
                         if (!this.isDefined(cfg.logger)) {
-                            cfg.logger = {};
-
-                        }
-                        // setting the error messenger,
-                        if (!this.isDefined(cfg.messenger)
-                            || (cfg.messenger.length == 0)) {
-                            cfg.messenger;
+                            cfg.logger = console;
 
                         }
 
@@ -484,45 +253,29 @@ function initAmtechObjects(window) {
                             }
                         })
                     },
-                    sendMessage: function (message) {
-                        window.amtech.console.utils.renderPFMessages(
-                            this.cfg.messenger, message);
-                    },
-                    sendMessageError: function (summary, detail) {
-                        if (!summary)
+
+                    sendMessageError: function (message) {
+                        if (!message){
                             return;
+                        }
                         this.sendMessage({
-                            severity: window.amtech.console.utils.PF_SEVERITY.ERROR,
+                            severity: window.amtech.console.utils.SEVERITY.ERROR,
                             summary: summary,
                             detail: detail
                         });
-                    },
-                    sendMessageWarning: function (summary, detail) {
-                        if (!summary)
+                        if (typeof message == "string") {
+                            message = {
+                                summary: message,
+                                detail: '',
+                                severity:  window.amtech.console.utils.SEVERITY.ERROR
+                            }
+                        } else if (typeof message != "object") {
+                            this.logger.error("Invalid error message " + message);
                             return;
-                        this.sendMessage({
-                            severity: window.amtech.console.utils.PF_SEVERITY.WARN,
-                            summary: summary,
-                            detail: detail
-                        });
-                    },
-                    sendMessageInfo: function (summary, detail) {
-                        if (!summary)
-                            return;
-                        this.sendMessage({
-                            severity: amtech.console.utils.PF_SEVERITY.INFO,
-                            summary: summary,
-                            detail: detail
-                        });
-                    },
-                    sendMessageFatal: function (summary, detail) {
-                        if (!summary)
-                            return;
-                        this.sendMessage({
-                            severity: window.amtech.console.utils.PF_SEVERITY.FATAL,
-                            summary: summary,
-                            detail: detail
-                        });
+                        }
+
+                        this.logger.debug("Error message received " + JSON.stringify(message));
+                        this.fireEvent(this.EVENTS.ERROR, message);
                     },
 
                     setChildrenWidgets: function () {
@@ -864,7 +617,7 @@ function initAmtechObjects(window) {
 
                     },
                     isDefined: function (argument) {
-                        return (typeof argument != "undefined")
+                        return (typeof argument !== "undefined")
                             && (argument != null)
                     },
                     getContainer: function () {

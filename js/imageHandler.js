@@ -14,7 +14,7 @@
     var DOMURL = (typeof window != 'undefined') ? (window.URL || window.webkitURL || window) : undefined;
     class ImageHandler {
 
-        constructor(dapClient) {
+        constructor(dapClient,logger) {
             var baseUrl = "/amtech/linkeddata/types/composite/entity";
             var escapedUrl = '^' + baseUrl.replace('/', '\/');
             var nameRegexp = '[^\/]+';
@@ -29,6 +29,10 @@
 
             this.imageFieldForClass = 'typesvgicon';
             this.dapClient = dapClient;
+            this.setLogger(logger);
+        }
+        setLogger(logger){
+            this.logger=logger||console;
         }
         getImageCssClassName(url) {
             if (this.PATTERN_INSTANCE_URL.test(url)) {
@@ -75,13 +79,13 @@
         }
 
         getExternalResource(url, binary) {
-            var result = { type: "url", data: this.dapClient.dapUrl + url };
+            var result = { type: "url", data: url };
             if (!this.dapClient) {
                 return Promise.resolve(result);
             } else {
-
+                var logger=this.logger;
                 return (binary ? this.dapClient.getBinaryResource(url) : this.dapClient.get(url)).then((response) => {
-                    logger.log("================> read successful")
+                    logger.debug("================> read successful")
                     if (!response) {
                         throw new Error("Unexpected empty response for image");
                     } else {
