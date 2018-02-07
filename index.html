@@ -7,7 +7,7 @@
     <title>Amtech IoT demo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-     <link rel="stylesheet" href="./css/main.css" type="text/css" />
+    <link rel="stylesheet" href="./css/main.css" type="text/css" />
     <link rel="stylesheet" href="./css/responsive-design.css" type="text/css" />
     <link rel="stylesheet" href="./css/leaflet.label.css" />
     <link rel="stylesheet" href="./css/map.css" />
@@ -63,31 +63,24 @@
 <body id='mainBody'>
     <div id="mainContent" class="content">
         <div id="entityCssClasses"></div>
+        <div id="options"></div>
         <div id="mapPanel" class="map-container-panel" style="display:none;top:0px;left:0px;" closable="true">
             <div class="map-container"></div>
         </div>
 
     </div>
     <script lang="js">
-        var elements = [{
-            "@id": "/amtech/things/entities/amtechM2mBridge/bridge1",
-            "location": "{\"wkt\":\"POINT(0 0)\"}",
-            "@type": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge",
-            "icon": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge/typesvgicon",
-            "_name": "bridge1"
-        }, {
-            "@id": "/amtech/things/entities/amtechM2mBridge/bridge2",
-            "location": "{\"wkt\":\"POINT(0 0)\"}",
-            "@type": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge",
-            "icon": "/amtech/linkeddata/types/composite/entity/amtechM2mBridge/typesvgicon",
-            "_name": "bridge1"
-        }, {
-            "@id": "/amtech/things/entities/BLEbeaconsScanner/bleScanner1",
-            "location": "{\"wkt\":\"POINT(0 0)\"}",
-            "@type": "/amtech/linkeddata/types/composite/entity/BLEbeaconsScanner",
-            "icon": "/amtech/linkeddata/types/composite/entity/BLEbeaconsScanner/typesvgicon",
-            "_name": "bleScanner1"
-        }];
+        var observerUrls = {
+            Assets: "/amtech/observersexec/amtech/activities/Metalsa_Assets/observers/SearchAllAssets?observation=%7B%22%40type%22%3A%22%2Famtech%2Flinkeddata%2Ftypes%2Fcomposite%2Fobservation%2FSearch_Asset%22%2C%22%40id%22%3A%22%2Famtech%2Fthings%2Fobservations%2FSearch_Asset_Test%22%2C%22topic%22%3A%22%2FMetalsa%2FSearch_Asset%22%2C%22location%22%3A%22%22%2C%22description%22%3A%22.%2A%22%2C%22targetthings%22%3A%22%5B%5D%22%2C%22proximityarea%22%3A%22%22%2C%22detectiontime%22%3A%222018-02-07T11%3A39%3A50.192-06%3A00%22%2C%22occurrencetime%22%3A%222018-02-07T11%3A39%3A50.192-06%3A00%22%2C%22creationDate%22%3A%222018-02-07T11%3A39%3A50.192-06%3A00%22%2C%22producer%22%3A%22consola%22%2C%22MIRROR_ASSET_NUMBER%22%3A%22%22%2C%22BOOK_TYPE_CODE%22%3A%22HT.APO.IFRS.US%22%2C%22SET_OF_BOOKS_ID%22%3A0%2C%22COST_CENTER%22%3A%22%22%2C%22MANUFACTURER_NAME%22%3A%22%22%2C%22ASSET_KEY_CCID%22%3A0%2C%22ASSET_ID%22%3A0%2C%22PARENT_ASSET_NUMBER%22%3A%22%22%2C%22SERIAL_NUMBER%22%3A%22%22%2C%22COST%22%3A0.0%2C%22MODEL_NUMBER%22%3A%22%22%2C%22PROCESS_TYPE%22%3A%22.%2A%22%2C%22ASSET_NUMBER%22%3A%22.%2A%22%2C%22LOCATION_ID%22%3A%22.%2A.%2A%22%2C%22ACCUMULATED_DEPRECIATION%22%3A0.0%2C%22MASTER_ASSET_NUMBER%22%3A%22%22%2C%22TAG_NUMBER%22%3A%22.%2A%22%2C%22ASSET_DESCRIPTION%22%3A%22.%2A%22%2C%22PROJECT_NUMBER%22%3A%22.%2A%22%2C%22ASSIGNED_TO%22%3A%22.%2A%22%2C%22ASSET_CATEGORY_ID%22%3A%22%22%2C%22NET_BOOK_VALUE%22%3A0.0%2C%22PROGRAM%22%3A%22.%2A%22%2C%22ZONE%22%3A%22.%2A%22%2C%22battery%22%3A9000.0%7D",
+            Assets2: "/amtech/observersexec/amtech/activities/Metalsa_Assets/observers/SearchAllAssets?observation=%7B%22%40type%22%3A%22%2Famtech%2Flinkeddata%2Ftypes%2Fcomposite%2Fobservation%2FSearch_Asset%22%2C%22%40id%22%3A%22%2Famtech%2Fthings%2Fobservations%2FSearch_Asset_Test%22%2C%22topic%22%3A%22%2FMetalsa%2FSearch_Asset%22%2C%22location%22%3A%22%22%2C%22description%22%3A%22.%2A%22%2C%22targetthings%22%3A%22%5B%5D%22%2C%22proximityarea%22%3A%22%22%2C%22detectiontime%22%3A%222018-02-07T11%3A39%3A50.192-06%3A00%22%2C%22occurrencetime%22%3A%222018-02-07T11%3A39%3A50.192-06%3A00%22%2C%22creationDate%22%3A%222018-02-07T11%3A39%3A50.192-06%3A00%22%2C%22producer%22%3A%22consola%22%2C%22MIRROR_ASSET_NUMBER%22%3A%22%22%2C%22BOOK_TYPE_CODE%22%3A%22HT.APO.IFRS.US%22%2C%22SET_OF_BOOKS_ID%22%3A0%2C%22COST_CENTER%22%3A%22%22%2C%22MANUFACTURER_NAME%22%3A%22%22%2C%22ASSET_KEY_CCID%22%3A0%2C%22ASSET_ID%22%3A0%2C%22PARENT_ASSET_NUMBER%22%3A%22%22%2C%22SERIAL_NUMBER%22%3A%22%22%2C%22COST%22%3A0.0%2C%22MODEL_NUMBER%22%3A%22%22%2C%22PROCESS_TYPE%22%3A%22.%2A%22%2C%22ASSET_NUMBER%22%3A%22.%2A%22%2C%22LOCATION_ID%22%3A%22.%2A.%2A%22%2C%22ACCUMULATED_DEPRECIATION%22%3A0.0%2C%22MASTER_ASSET_NUMBER%22%3A%22%22%2C%22TAG_NUMBER%22%3A%22.%2A%22%2C%22ASSET_DESCRIPTION%22%3A%22.%2A%22%2C%22PROJECT_NUMBER%22%3A%22.%2A%22%2C%22ASSIGNED_TO%22%3A%22.%2A%22%2C%22ASSET_CATEGORY_ID%22%3A%22%22%2C%22NET_BOOK_VALUE%22%3A0.0%2C%22PROGRAM%22%3A%22.%2A%22%2C%22ZONE%22%3A%22.%2A%22%2C%22battery%22%3A9000.0%7D"
+        
+        }
+        var config = {
+            dapUrl: "https://dap.amtech.mx",
+            user: "webappmetalsa@amtech.mx",
+            tenant: "follower_metalsa@@amtech.mx",
+            password: "W3b4ppM3t4"
+        }
         //logger creation
         function prepareLog(level, text) {
             return "[" + new Date().toISOString() + "] " + level.toUpperCase() + " - " + text;
@@ -197,13 +190,22 @@
         var zoomRatio;
         $(document).ready(function () {
 
-            zoomRatio = $(window).width() / (0.0 + screen.width);
-            getLogger().debug("window loaded. zoom ratio set to " + zoomRatio);
+            //zoomRatio = $(window).width() / (0.0 + screen.width);
+            //getLogger().debug("window loaded. zoom ratio set to " + zoomRatio);
 
             showMap();
-            getMapPromises().addElements(elements).then((response)=>{
-                return getMapPromises().centerToLayers(response);
-            });
+            getMapWidget().addEventListener("map:elementclick",(data)=>{
+                alert("Clicked on "+data.url);
+            })
+            for (label in observerUrls) {
+                var $a=$("<h2>").click(() => {
+                    getMapPromises().clearMap();
+                    getMapPromises().addQueryResults(observerUrls[label]).then((response) => {
+                        return getMapPromises().centerToLayers(response);
+                    });
+                }).appendTo($("#options"));
+                $a.text(label);
+            }
         });
     </script>
 </body>

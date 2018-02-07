@@ -99,7 +99,7 @@
     });
     class RestCallError extends Error{
         constructor(message, data, statusCode, response) {
-            this._super(message);
+            super(message);
             this.data = data;
             this.response = response;
             this.statusCode = typeof statusCode !== "undefined" ? statusCode :
@@ -228,11 +228,11 @@
                 // embedded collections
                 case "/amtech/linkeddata/types/composite/observerexecution":
                     if (json["queriesresults"]) {
-                        return this.addCollectionMembers(this.getMembers(json["queriesresults"]));
+                        return this.mergeCollectionMembers(this.getMembers(json["queriesresults"]));
                     }
                     break;
                 case "/amtech/linkeddata/types/composite/query":
-                    return this.addCollectionMembers(json["results"]);
+                    return this.mergeCollectionMembers(json["results"]);
 
                 default:
                     return json;

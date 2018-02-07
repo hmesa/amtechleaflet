@@ -183,12 +183,7 @@
 
             }
             this.setStatus(url, "converting");
-            var data = {
-                "@id": url,
-                "@type": itemType,
-                _name: json['_name'] || (url.substring(url.lastIndexOf('/') + 1)),
-                description: json['description']
-            };
+            var data = json;
             var iconData;
 
             if (json["proximityarea"] && json["proximityarea"].length > 0) {

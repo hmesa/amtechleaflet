@@ -1119,7 +1119,13 @@
         onClickEntityLayer: function (event, layer) {
             if (this.isShown() && this.canSelect()) {
                 // console.log("event caught: "+event.type);
-                var fullLayer = (layer || (event && event.layer && event.layer.fullLayer));
+                var layer = (layer || (event && event.layer));
+                var fullLayer;
+                if (layer &&layer.fullLayer){
+                    fullLayer=layer.fullLayer;
+                }else{
+                    fullLayer=layer;
+                }
                 var url = fullLayer.url;
 
                 if (!event) {
