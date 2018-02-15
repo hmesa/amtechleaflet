@@ -174,7 +174,7 @@
             var error;
             if (!url || !itemType) {
                 error = new Error("resource without url or type");
-            } else if (!itemType.startsWith("/amtech/linkeddata/types/composite/entity/")) {
+            } else if (!itemType.startsWith(amtech.console.PATHS.TYPE_ENTITY)) {
                 error = new Error("Only entities can be represented ");
             }
             if (error) {
@@ -184,6 +184,7 @@
             }
             this.setStatus(url, "converting");
             var data = json;
+            data.shortName = url.replace(amtech.console.PATHS.ENTITIES + "/", "");
             var iconData;
 
             if (json["proximityarea"] && json["proximityarea"].length > 0) {

@@ -50,6 +50,7 @@
             //visualization
             resizeDelay: 100,
             overlayOpacity: 0.5,
+            labelTemplate:undefined,
 
             //interaction
             center: [0, 0],
@@ -1016,16 +1017,21 @@
             return fullLayer;
         },
         bindPopupAndLabel: function (fullLayer, data) {
-            var label = data["@id"].replace(amtech.console.PATHS.ENTITIES + "/", "");
-            if (fullLayer.theMarker) {
-                fullLayer.theMarker.bindLabel(label, {
-                    className: this.STYLES.LABEL
-                });
-            } else {
-                fullLayer.theLayer.bindLabel(label, {
-                    className: this.STYLES.LABEL
-                })
+            var label = data.shortName;
+            var labelDefinition=this.cfg.labelDefinition;
+            if (typeof labelDefinition=="function"){
+                label = labelDefinition(data);
             }
+            var layer;
+            if (fullLayer.theMarker) {
+                layer=fullLayer.theMarker;
+            } else {
+                layer=fullLayer.theLayer;
+            }
+            layer.bindTooltip(label, {
+                className: this.STYLES.LABEL,
+                permanent:false
+            });
             /*
                         fullLayer
                             .bindPopup("<h3>" + data._name + "</h3>"
@@ -1160,7 +1166,6 @@
                 // console.log("event caught: "+event.type);
                 var fullLayer = event.layer.fullLayer;
                 this.replaceClassToLayer(fullLayer, "", this.STYLES.HOVER);
-                fullLayer.theMarker.showLabel();
             }
         },
         onMouseOutEntityLayer: function (event) {
@@ -1169,7 +1174,6 @@
                 // console.log("event caught: "+event.type);
                 var fullLayer = event.layer.fullLayer;
                 this.replaceClassToLayer(fullLayer, this.STYLES.HOVER, "");
-                fullLayer.theMarker.hideLabel();
             }
         },
         addElement: function (data) {

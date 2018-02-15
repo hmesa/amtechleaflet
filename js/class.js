@@ -2,6 +2,10 @@
     if (typeof Class == "undefined") {
         Class = window.Class;
     }
+    window.inherits = function (ctor, superCtor) {
+        ctor.super_ = superCtor;
+        Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
+    };
     if (typeof Class == "undefined") {
         (function () {
             var initializing = false,

@@ -9,6 +9,7 @@
  * Created by hmesa on 03/09/14.
  */
 function initAmtechObjects(window) {
+    
     window.String.prototype.format = function () {
         // got from http://stackoverflow.com/questions/1038746/equivalent-of-string-format-in-jquery
         var args = arguments;

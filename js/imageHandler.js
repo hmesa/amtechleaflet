@@ -164,7 +164,7 @@
                         return false;
                     }
                     if (response && response.length > 0) {
-                        var string = '.' + className + '{ content:' + this.getCssContentForUrl(response) + ';}';
+                        var string = '.' + className + '::before{ content:' + this.getCssContentForUrl(response) + ';}';
                         var styleId = 'entityClass_' + className;
                         var style = this.stylesContainerDiv.find('#' + styleId);
                         if (style.length == 0) {

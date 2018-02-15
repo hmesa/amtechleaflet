@@ -35,7 +35,7 @@
                     return;
                 }
             }
-            this.loginCredentials = () => {
+            this.loginCredentials = function() {
                 return {
                     username: user,
                     password: password,
@@ -99,7 +99,7 @@
                                     var split = hContentType.split(';');
                                     var contentTypeArr = split.splice(0, 1);
                                     contentType = contentTypeArr[0];
-                                    split.forEach((item) => {
+                                    split.forEach(function(item) {
                                         var keyValue = item.split("=");
                                         switch (keyValue[0]) {
                                             case "charset":
@@ -162,7 +162,7 @@
                 }
                 if (options.timeout) {
                     req.timeout = options.timeout;
-                    req.ontimeout = () => {
+                    req.ontimeout = function() {
                         done(new RestCallError("Timeout with request to " + url, undefined, this.status, this));
                     }
                 }
@@ -187,7 +187,7 @@
         },
         _restCallBinary: function (type, args, done) {
             try {
-                var parser = (request, contentType) => {
+                var parser = function(request, contentType) {
                     // make a copy of the response
                     return request.response;
                 }
@@ -201,285 +201,6 @@
             }
         }
     });
-    /*
-        class DapController {
-            constructor(dapUrl, user, pass, logger) {
-                this.dapUrl = dapUrl;
-                this.setLogger(logger);
-                this.setCredentials(user, pass);
-            }
-            setLogger(logger) {
-                this.logger = (logger) ? logger : console;
-            }
-            loginCredentialsAndRestOptions() {
-                var cred = (this.loginCredentials) ? this.loginCredentials() : {};
-                cred.timeout = this._timeoutMs || 60000;
-                return cred;
-            }
-            setCredentials(user, password) {
-                if (!user || !password) {
-                    this.loginCredentials = undefined;
-                    return;
-                } else if (this.loginCredentials != undefined) {
-                    var cred = this.loginCredentials();
-                    if (cred.user == user && cred.password == password) {
-                        return;
-                    }
-                }
-                this.loginCredentials = () => {
-                    return {
-                        username: user,
-                        password: password,
-                    };
-                }
-                this.logger.debug("setting credentials");
-            }
-            delete(url, paramsObj) {
-                return restCall(this.logger, "delete", [this.getUrlToDap(url, paramsObj), this.loginCredentialsAndRestOptions()]);
-            }
-            get(url, paramsObj) {
-                return restCall(this.logger, "get", [this.getUrlToDap(url, paramsObj), this.loginCredentialsAndRestOptions()]);
-    
-            }
-            getResource(resourceUri) {
-                return this.get(resourceUri)
-                    .then((response) => { console.log("loaded resource " + resourceUri); return response });
-            }
-            getBinaryResource(resourceUri, paramsObj) {
-                return restCallBinary(this.logger, "get", [this.getUrlToDap(resourceUri, paramsObj), this.loginCredentialsAndRestOptions()])
-                    .then((response) => {
-                        this.logger.debug("loaded binary resource " + resourceUri);
-                        return response
-                    })
-    
-            }
-            getResourceSelfContained(resourceUri, mode) {
-                var paramsObj = {};
-                if (mode == undefined) {
-                    mode = "selfContained";
-                }
-                if (["selfContained", "fullSelfContained"].indexOf(mode) >= 0) {
-                    paramsObj[mode] = true;
-                }
-                return this.get(resourceUri, paramsObj);
-            }
-            getResourceField(resourceUri, field, contentType) {
-                parmsObj = {
-                    property: field
-                };
-                if (contentType) {
-                    paramsObj["mtype"] = contentType;
-                }
-                return this.get(resourceUri, paramsObj);
-            }
-            postResource(url, json, paramsObj) {
-                return restCall(this.logger, "post", [this.getUrlToDap(url, paramsObj), JSON.stringify(json), this.loginCredentialsAndRestOptions()]);
-            }
-            putResource(url, json, paramsObj) {
-                return restCall(this.logger, "put", [this.getUrlToDap(url, paramsObj), JSON.stringify(json), this.loginCredentialsAndRestOptions()]);
-            }
-            addCollectionMembers(collection) {
-                var members = [];
-                if (collection && collection.length > 0) {
-                    collection.forEach((element) => {
-                        var newMembers = this.getMembers(element);
-                        if (newMembers) {
-                            if (Array.isArray(newMembers) && newMembers.length > 0) {
-                                members = members.concat(newMembers);
-                            } else {
-                                members.push(newMembers);
-                            }
-                        }
-                    });
-                }
-                return members;
-            }
-            getMembers(json) {
-                if (Array.isArray(json)){
-                    //it is the array of members
-                    return json;
-                }
-                var jsonType = json["@type"];
-    
-                switch (jsonType) {
-                    case "http://www.w3.org/ns/hydra/core#Collection":
-                        return json["members"];
-                    case "/amtech/linkeddata/types/composite/queryresult":
-                        return json["entities"];
-                    // embedded collections
-                    case "/amtech/linkeddata/types/composite/observerexecution":
-                        if (json["queriesresults"]) {
-                            return this.addCollectionMembers(this.getMembers(json["queriesresults"]));
-                        }
-                        break;
-                    case "/amtech/linkeddata/types/composite/query":
-                        return this.addCollectionMembers(json["results"]);
-    
-                    default:
-                        return json;
-                }
-                return [];
-            }
-            getQueryResults(queryUri, queryParams) {
-    
-                return this.get(queryUri, queryParams).then(
-                    (response) => {
-                        this.logger.debug("returned query json " + queryUri);
-                        var data = response;
-                        var contentType;
-                        if (response.contentType) {
-                            contentType = response.contentType;
-                            data = response.content;
-                        }
-                        var members = this.getMembers(data);
-                        if (members) {
-                            this.logger.debug("Found ", members.length, " members");
-                            return members;
-                        } else {
-                            throw new Error(response);
-                        }
-                    }
-                ).catch((error) => {
-                    this.logger.error(error.message, error.statusCode ? "(" + error.statusCode + ")" : "");
-                    throw error;
-                    // return undefined;
-                })
-            }
-    
-            getUrlToDap(resourceUri, paramsObj) {
-                return addParamsToUrl(this.dapUrl + resourceUri, paramsObj);
-            }
-            getBridgeInstancesByMacAddress(macAddress) {
-                if (!macAddress || macAddress.length == 0) {
-                    return Promise.resolve(undefined);
-                }
-                return this.getQueryResults("/amtech/system/queries/thingsbytype", {
-                    typeUrl: "/amtech/linkeddata/types/composite/entity/amtechM2mBridge",
-                    selfContained: "true",
-                    "/amtech/system/queries/thingsbytype/constraints": JSON.stringify([{
-                        "@id": "/amtech/system/queries/thingsbytype/constraints/_name",
-                        _name: "_name",
-                        field: "_name",
-                        fieldUri: "/amtech/linkeddata/types/composite/entity/amtechM2mBridge/_name",
-                        "@type": "/amtech/linkeddata/types/composite/constraint/stringregex",
-                        operator: "regex",
-                        paramsList: [
-                            "regex"
-                        ],
-                        regex: ".*:" + macAddress
-                    }])
-                }).then((response) => {
-                    let content;
-                    if (!response.contentType) {
-                        content = response;
-                    } else if (response.contentType == "application/json") {
-                        content = response.content;
-                    }
-                    if (content && !Array.isArray(content)) {
-                        content = [content];
-                    }
-    
-                    return content;
-                })
-            }
-            getThingsInWkt(wkt, tenantToUse) {
-                var options = {
-                    "geofence": wkt
-                };
-                if (tenantToUse && tenantToUse.length > 0) {
-                    options["/amtech/system/queries/thingswithinwkt/constraints"] = [{
-                        '@type': '/amtech/linkeddata/types/composite/constraint/comparisonstring',
-                        'field': '_tenant',
-                        '_fieldUri': CONSTANTS.PATHS.TYPES + "/entity/_tenant",
-                        'operator': 'eq',
-                        'value': tenantToUse
-                    }]
-                };
-                return this.getQueryResults("/amtech/system/queries/thingswithinwkt", options);
-            }
-            deleteBridgeAndInstances(macAddress,tenantToUse) {
-                return this.getBridgeInstancesByMacAddress(macAddress).then((response) => {
-                    if (!response || !response.length) {
-                        return response
-                    } else {
-                        var list = [];
-                        var promises = response.map((bridge) => {
-                            let newPromise;
-                            let bridgeUri;
-                            let bridgeName;
-                            let bridgeInstances=undefined;
-                            if (typeof bridge == "string") {
-                                bridgeUri = bridge;
-                                bridgeName = bridge.substr(bridge.lastIndexOf("/") + 1);
-                            } else {
-                                bridgeUri = bridge["@id"];
-                                bridgeName = bridge._name;
-                                if (bridge.bridgeInstances && !Array.isArray(bridge.bridgeInstances)){
-                                    bridgeInstances = bridge.bridgeInstances.members;
-                                }else{
-                                    bridgeInstances = bridge.bridgeInstances;
-                                }
-                            }
-                            newPromise = this.delete(bridgeUri);
-                            if (bridgeInstances && bridgeInstances.length > 0) {
-                                newPromise = newPromise.then((response) => {
-                                    return this.deleteAll(bridgeInstances);
-                                });
-                            }
-                            return newPromise.then((ignored) => {
-                                return this.getQueryResults("/amtech/system/queries/thingsbytype", {
-                                    typeUrl: "/amtech/linkeddata/types/composite/entity/geofence",
-                                    "/amtech/system/queries/thingsbytype/constraints": JSON.stringify([{
-                                        "@id": "/amtech/system/queries/thingsbytype/constraints/_name",
-                                        _name: "_name",
-                                        field: "_name",
-                                        fieldUri: "/amtech/linkeddata/types/composite/entity/amtechM2mBridge/_name",
-                                        "@type": "/amtech/linkeddata/types/composite/constraint/stringregex",
-                                        operator: "regex",
-                                        paramsList: [
-                                            "regex"
-                                        ],
-                                        regex: "geofence:" + bridgeName
-                                    }])
-                                }).then((geofences) => {
-                                    var mapPromises = geofences.map((geofence) => {
-                                        let loc = geofence.location;
-                                        return this.getThingsInWkt(loc.wkt || loc,tenantToUse).then((list) => {
-                                            var geofenceUrl = geofence["@id"];
-                                            var exist = false;
-                                            var i = -1;
-                                            while (!exist && ++i < list.length) {
-                                                exist = list[i]["@id"] == geofenceUrl;
-                                            }
-                                            if (!exist) {
-                                                list.push(geofence);
-                                            }
-                                            return this.deleteAll(list);
-                                        })
-                                    });
-                                    return Promise.all(mapPromises);
-                                })
-    
-                            })
-                        });
-                        return Promise.all(promises);
-                    }
-    
-                })
-            }
-            deleteAll(list) {
-    
-                var promiseArray = list.map((item) => {
-                    if (item && typeof item !== "string") {
-                        item = item["@id"];
-                    }
-                    return (item) ? this.delete(item) : Promise.resolve();
-                });
-    
-                return Promise.all(promiseArray);
-            }
-        }
-    */
     HttpRequestRestCaller = HttpRequestRestCaller;
     dap.createDapClient = function (logger, dapUrl, user, password) {
         var restCaller = new HttpRequestRestCaller({
