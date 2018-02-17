@@ -9,6 +9,17 @@
  * Created by hmesa on 03/09/14.
  */
 function initAmtechObjects(window) {
+    window.String.prototype.endsWith = function (s) {
+        return this.length >= s.length && this.substr(this.length - s.length) === s;
+    };
+    
+    window.String.prototype.startsWith = function (s){
+        return this.indexOf(s) === 0;
+    };
+    
+    window.String.prototype.contains = function (s){
+        return this.indexOf(s) > -1;
+    };
     
     window.String.prototype.format = function () {
         // got from http://stackoverflow.com/questions/1038746/equivalent-of-string-format-in-jquery
@@ -245,9 +256,10 @@ function initAmtechObjects(window) {
                     },
                     setLogger:function(logger){
                         this.logger =logger||{};
-                        ["log", "info", "debug", "warn", "error"].forEach((method) => {
-                            if (typeof this.logger[method] != "function") {
-                                this.logger[method] = function () {
+                        var self=this;
+                        ["log", "info", "debug", "warn", "error"].forEach(function(method)  {
+                            if (typeof self.logger[method] != "function") {
+                                self.logger[method] = function () {
                                     console.log.apply(console, 
                                     [method.toUpperCase() + ": "].concat(Array.prototype.slice.apply(arguments)));
                                 }

@@ -327,7 +327,7 @@
             }
             for (var i = 0; i < list.length; i++) {
                 if (typeof list[i] != "string") {
-                    let obj = this.getResource(list[i]);
+                    var obj = this.getResource(list[i]);
                     list[i] = list[i]['@id'] || '';
                 }
             }

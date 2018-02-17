@@ -41,12 +41,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0/leaflet-src.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <!-- internet explorer 11 and below -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.4/bluebird.min.js"></script>
 
     <script type="text/javascript" src="./js/Leaflet.ImageOverlay.Rotated.js"></script>
 
     <script type="text/javascript" src="./js/class.js" lang="js"></script>
     <script type="text/javascript" src="./js/eventEmitter.ie.js" lang="js"></script>
-    <script type="text/javascript" src="./js/cssSafeCodec.js" lang="js"></script>
+    <script type="text/javascript" src="./js/cssSafeCodec.ie.js" lang="js"></script>
     <script type="text/javascript" src="./js/amtech.js" lang="js"></script>
     <script type="text/javascript" src="./js/wktParser.js" lang="js"></script>
     <script type="text/javascript" src="./js/imageHandler.ie.js"></script>
@@ -86,7 +88,7 @@
         var logLevel = "debug";
         var logger;
         function createLogger(loglevel) {
-            logger = new Loggers.Logger(logLevel, (level, text) => {
+            logger = new Loggers.Logger(logLevel, function(level, text){
                 console.log(prepareLog(level, text));
             });
 
@@ -139,7 +141,7 @@
 
             });
             mapWidget.toggleChangeNotificationsActivated(false);
-            $(window).resize(() => { mapWidget.onresize() });
+            $(window).resize(function(){ mapWidget.onresize() });
             mapWidget.setLogger(getLogger().withFixExecInfo("Map", ": "));
             //mapWidget.addEventListener(mapWidget.EVENTS.LOCATION_FOUND, setDeviceLocation);
             //mapWidget.addEventListener(mapWidget.EVENTS.LOCATION_ERROR, showLocationError);
@@ -200,13 +202,13 @@
             //getLogger().debug("window loaded. zoom ratio set to " + zoomRatio);
 
             showMap();
-            getMapWidget().addEventListener("map:elementclick", (data) => {
+            getMapWidget().addEventListener("map:elementclick", function(data){
                 alert("Clicked on " + data.url);
             })
             for (label in observerUrls) {
-                var $a = $("<h2>").click(() => {
+                var $a = $("<h2>").click(function(){
                     getMapPromises().clearMap();
-                    getMapPromises().addQueryResults(observerUrls[label]).then((response) => {
+                    getMapPromises().addQueryResults(observerUrls[label]).then(function(response){
                         return getMapPromises().centerToLayers(response);
                     });
                 }).appendTo($("#options"));

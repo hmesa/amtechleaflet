@@ -2,8 +2,8 @@
     "use strict"
 
     if (typeof window.btoa == 'undefined') {
-        window.btoa = (string) => { return Buffer.from(string, 'base64').toString("ascii"); };
-        window.atob = (string) => { return Buffer.from(string).toString("base64"); };
+        window.btoa = function (string) { return Buffer.from(string, 'base64').toString("ascii"); };
+        window.atob = function (string) { return Buffer.from(string).toString("base64"); };
     }
     var btoa = window.btoa;
     var atob = window.atob;
@@ -53,7 +53,7 @@
         init: function (cfg) {
             this.setLogger(cfg.logger);
         },
-        setLogger(logger) {
+        setLogger: function (logger) {
             this.logger = logger || console;
         },
         addParamsToUrl: function (url, paramsObj) {
@@ -67,7 +67,7 @@
                 if (url.indexOf('?') < 0) {
                     sep = "?";
                 }
-                for (let key in paramsObj) {
+                for (var key in paramsObj) {
                     if (paramsObj.hasOwnProperty(key)) {
                         url += (sep + encodeURI(key) + "=" + encodeURI(paramsObj[key]));
                         sep = "&";
@@ -98,26 +98,26 @@
 
     });
 
-    function RestCallError(message, data, statusCode, response) {
-        RestCallError.super_.apply(this, message);
-        this.data = data;
-        this.response = response;
-        this.statusCode = typeof statusCode !== "undefined" ? statusCode :
-            response ? response.status : undefined;
+    var RestCallError = window.inherits(Error, {
+        constructor: function (message, data, statusCode, response) {
+            this._super(this, message);
+            this.data = data;
+            this.response = response;
+            this.statusCode = typeof statusCode !== "undefined" ? statusCode :
+                response ? response.status : undefined;
 
-    };
-    RestCallError.prototype.getData = function () {
-        return this.data;
-    };
-    RestCallError.prototype.getResponse = function () {
-        return this.response;
-    };
-    RestCallError.prototype.getStatusCode = function () {
-        return this.statusCode;
-    };
-    window.inherits(RestCallError,Error);
-
-
+        },
+        getData: function () {
+            return this.data;
+        },
+        getResponse: function () {
+            return this.response;
+        },
+        getStatusCode: function () {
+            return this.statusCode;
+        }
+    });
+    
     var DapBaseController = window.Class.extend({
         init: function (restCaller, logger) {
             this.restCaller = restCaller;
@@ -127,11 +127,12 @@
             this.logger = logger || console;
         },
         get: function (url, paramsObj) {
-            return new Promise((resolve, reject) => {
+            var self = this;
+            return new Promise(function (resolve, reject) {
                 try {
-                    this.restCaller.get(
+                    self.restCaller.get(
                         url, paramsObj,
-                        (err, result) => {
+                        function (err, result) {
                             if (err != null) {
                                 reject(err);
                             } else {
@@ -146,11 +147,12 @@
             });
         },
         getBinary: function (url, paramsObj) {
-            return new Promise((resolve, reject) => {
+            var self = this;
+            return new Promise(function (resolve, reject) {
                 try {
-                    this.restCaller.getBinary(
+                    self.restCaller.getBinary(
                         url, paramsObj,
-                        (err, result) => {
+                        function (err, result) {
                             if (err != null) {
                                 reject(err);
                             } else {
@@ -165,15 +167,16 @@
             });
         },
         getResource: function (resourceUri) {
+            var logger = this.logger;
             return this.get(resourceUri)
-                .then((response) => {
-                    this.logger.debug("loaded resource " + resourceUri);
+                .then(function (response) {
+                    logger.debug("loaded resource " + resourceUri);
                     return response
                 });
         },
         getBinaryResource: function (resourceUri, paramsObj) {
             return this.getBinary(resourceUri, paramsObj)
-                .then((response) => {
+                .then(function (response) {
                     this.logger.debug("loaded binary resource " + resourceUri);
                     return response
                 })
@@ -200,9 +203,10 @@
         },
         mergeCollectionMembers: function (collection) {
             var members = [];
+            var self = this;
             if (collection && collection.length > 0) {
-                collection.forEach((element) => {
-                    var newMembers = this.getMembers(element);
+                collection.forEach(function (element) {
+                    var newMembers = self.getMembers(element);
                     if (newMembers) {
                         if (Array.isArray(newMembers) && newMembers.length > 0) {
                             members = members.concat(newMembers);
@@ -241,26 +245,27 @@
             return [];
         },
         getQueryResults: function (queryUri, queryParams) {
-
+            var logger = this.logger;
+            var self = this;
             return this.get(queryUri, queryParams).then(
-                (response) => {
-                    this.logger.debug("returned query json " + queryUri);
+                function (response) {
+                    logger.debug("returned query json " + queryUri);
                     var data = response;
                     var contentType;
                     if (response.contentType) {
                         contentType = response.contentType;
                         data = response.content;
                     }
-                    var members = this.getMembers(data);
+                    var members = self.getMembers(data);
                     if (members) {
-                        this.logger.debug("Found ", members.length, " members");
+                        logger.debug("Found ", members.length, " members");
                         return members;
                     } else {
                         throw new Error(response);
                     }
                 }
-            ).catch((error) => {
-                this.logger.error(error.message, error.statusCode ? "(" + error.statusCode + ")" : "");
+            ).catch(function (error) {
+                logger.error(error.message, error.statusCode ? "(" + error.statusCode + ")" : "");
                 throw error;
                 // return undefined;
             })

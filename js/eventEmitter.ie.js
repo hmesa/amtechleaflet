@@ -15,25 +15,25 @@
                 },
                 addEventListener: function (eventTypes, eventHandler,
                     context) {
+                    eventTypes.split().forEach(function (type) {
 
-                    for (let elem of eventTypes.split()) {
                         var listener = (context) ? eventHandler.bind(context) : eventHandler;
                         this._emitter.on(elem, listener);
-                    }
+                    });
                     return this;
                 },
                 addEventListenerOnce: function (eventTypes, eventHandler,
                     context) {
-                    for (let elem of eventTypes.split()) {
+                    eventTypes.split().forEach(function (type) {
                         var listener = (context) ? eventHandler.bind(context) : eventHandler;
                         this._emitter.once(elem, listener);
-                    }
+                    });
                     return this;
                 },
-                clearEventListeners: function (eventType) {
-                    for (let elem of eventType.split()) {
+                clearEventListeners: function (eventTypes) {
+                    eventTypes.split().forEach(function (type) {
                         this._emitter.removeAllListeners(elem);
-                    }
+                    });
                 },
                 clearAllEventListeners: function () {
                     this._emitter.removeAllListeners();
@@ -47,9 +47,9 @@
                         console.log("we can not remove events with context, use bind instead")
 
                     } else {
-                        for (let elem of eventTypes.split()) {
+                        eventTypes.split().forEach(function (type) {
                             this._emitter.removeListener(elem, listener);
-                        }
+                        })
                     }
                     return this;
                 }

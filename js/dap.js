@@ -46,10 +46,10 @@
         getUrlToDap: function (resourceUri, paramsObj) {
             return this.addParamsToUrl(this.dapUrl + resourceUri, paramsObj);
         },
-        get(url, paramsObj, done) {
+        get:function(url, paramsObj, done) {
             return this._restCall("GET", [this.getUrlToDap(url, paramsObj), this.loginCredentialsAndRestOptions()], done);
         },
-        getBinary(url, paramsObj, done) {
+        getBinary:function(url, paramsObj, done) {
             return this._restCallBinary("GET", [this.getUrlToDap(url, paramsObj), this.loginCredentialsAndRestOptions()], done);
         },
         validateRestResponse: function (data, response) {

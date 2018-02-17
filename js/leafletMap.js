@@ -50,7 +50,7 @@
             //visualization
             resizeDelay: 100,
             overlayOpacity: 0.5,
-            labelTemplate:undefined,
+            labelTemplate: undefined,
 
             //interaction
             center: [0, 0],
@@ -124,24 +124,25 @@
                 }
             }
 
-            for (key in this._defaults) {
+            for (var key in this._defaults) {
                 if (typeof cfg[key] === "undefined") {
                     cfg[key] = this._defaults[key];
                 }
             }
 
-            var isOnControlSettings = {
-                [this.CONTROLS.LOCATEME]: "withLocateMeControl",
-                [this.CONTROLS.RESIZER]: "withResizerControl",
-                [this.CONTROLS.LAYER]: "withLayerControl",
-                [this.CONTROLS.COORDINATE]: "withCoordinateControl",
-                [this.CONTROLS.ZOOM]: "withZoomControl",
-                [this.CONTROLS.EDIT_STATE]: "withEditStateControl",
-                [this.CONTROLS.LINK_SEARCH]: "withLinkSearchControl"
-            }
-            for (var key in isOnControlSettings) {
-                this[this._getControlId(key) + "_isShown"] = cfg[isOnControlSettings[key]];
-            }
+            var isOnControlSettings = [
+                [this.CONTROLS.LOCATEME, "withLocateMeControl"],
+                [this.CONTROLS.RESIZER, "withResizerControl"],
+                [this.CONTROLS.LAYER, "withLayerControl"],
+                [this.CONTROLS.COORDINATE, "withCoordinateControl"],
+                [this.CONTROLS.ZOOM, "withZoomControl"],
+                [this.CONTROLS.EDIT_STATE, "withEditStateControl"],
+                [this.CONTROLS.LINK_SEARCH, "withLinkSearchControl"]
+            ];
+            var self=this;
+            isOnControlSettings.forEach(function (keyValue) {
+                self[self._getControlId(keyValue[0]) + "_isShown"] = cfg[keyValue[1]];
+            });
             return cfg;
 
         },
@@ -405,7 +406,7 @@
                 this.logger.info("MAP:  stopping user location");
                 this.__mustCenterAfterLocation = false;
                 this.map.stopLocate();
-                
+
                 allLayers.forEach(function (layer) {
                     var bounds = self.getLayerBounds(layer);
                     if (bounds.isValid()) {
@@ -484,7 +485,7 @@
         getDefaultZoom: function () {
             return this.cfg.zoom;
         },
-        sendMessageError(message) {
+        sendMessageError: function (message) {
             if (typeof message == "string") {
                 message = {
                     message: message,
@@ -647,10 +648,10 @@
         },
         initializeSpiderfier: function () {
             this.oms = new OverlappingMarkerSpiderfier(this.map);
-            this.oms.addListener('click', (marker) => {
+            this.oms.addListener('click', function (marker) {
                 this.onClickEntityLayer(undefined, marker);
             });
-            this.oms.addListener('spiderfy', (markers) => {
+            this.oms.addListener('spiderfy', function (markers) {
                 this.map.closePopup();
             });
         },
@@ -1018,19 +1019,19 @@
         },
         bindPopupAndLabel: function (fullLayer, data) {
             var label = data.shortName;
-            var labelDefinition=this.cfg.labelDefinition;
-            if (typeof labelDefinition=="function"){
+            var labelDefinition = this.cfg.labelDefinition;
+            if (typeof labelDefinition == "function") {
                 label = labelDefinition(data);
             }
             var layer;
             if (fullLayer.theMarker) {
-                layer=fullLayer.theMarker;
+                layer = fullLayer.theMarker;
             } else {
-                layer=fullLayer.theLayer;
+                layer = fullLayer.theLayer;
             }
             layer.bindTooltip(label, {
                 className: this.STYLES.LABEL,
-                permanent:false
+                permanent: false
             });
             /*
                         fullLayer
@@ -1127,10 +1128,10 @@
                 // console.log("event caught: "+event.type);
                 var layer = (layer || (event && event.layer));
                 var fullLayer;
-                if (layer &&layer.fullLayer){
-                    fullLayer=layer.fullLayer;
-                }else{
-                    fullLayer=layer;
+                if (layer && layer.fullLayer) {
+                    fullLayer = layer.fullLayer;
+                } else {
+                    fullLayer = layer;
                 }
                 var url = fullLayer.url;
 
@@ -1732,13 +1733,16 @@
             };
 
             var baseLayers = {};// put here the tile layers or background
+            var keyValues = [
+                [getMessage("Things"), this.layerAllItems],
+                [getMessage("Timeline"), this.layerTimeline],
+                [getMessage("ProximityAreas"), this.layerProximityAreas],
+                [getMessage("Floorplans"), this.layerFloorplans]];
             // overlays
-            var overlays = {
-                [getMessage("Things")]: this.layerAllItems,
-                [getMessage("Timeline")]: this.layerTimeline,
-                [getMessage("ProximityAreas")]: this.layerProximityAreas,
-                [getMessage("Floorplans")]: this.layerFloorplans
-            }
+            var overlays = {};
+            keyValues.forEach( function(keyValue){
+                overlays[keyValue[0]]=keyValue[1];
+            })
             return new L.Control.Layers(baseLayers, overlays, options);
         },
         createLocalizedZoomControl: function () {
