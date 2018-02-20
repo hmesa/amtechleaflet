@@ -12,15 +12,15 @@ function initAmtechObjects(window) {
     window.String.prototype.endsWith = function (s) {
         return this.length >= s.length && this.substr(this.length - s.length) === s;
     };
-    
-    window.String.prototype.startsWith = function (s){
+
+    window.String.prototype.startsWith = function (s) {
         return this.indexOf(s) === 0;
     };
-    
-    window.String.prototype.contains = function (s){
+
+    window.String.prototype.contains = function (s) {
         return this.indexOf(s) > -1;
     };
-    
+
     window.String.prototype.format = function () {
         // got from http://stackoverflow.com/questions/1038746/equivalent-of-string-format-in-jquery
         var args = arguments;
@@ -54,7 +54,7 @@ function initAmtechObjects(window) {
             getWidget: function (id) {
                 return window.amtech.console.widgets[amtech.console.getWidgetName(id)];
             },
-            I18N:{},
+            I18N: {},
             utils: {
                 classes: {},
                 SEVERITY: {
@@ -166,7 +166,7 @@ function initAmtechObjects(window) {
                         + Math.abs(h).toString() + ":"
                         + ((m < 30) ? "00" : "30");
                 }
-            },            
+            },
             constants: {
                 PROP_TYPE: "@type",
                 PROP_ID: "@id",
@@ -254,21 +254,21 @@ function initAmtechObjects(window) {
 
                         return cfg;
                     },
-                    setLogger:function(logger){
-                        this.logger =logger||{};
-                        var self=this;
-                        ["log", "info", "debug", "warn", "error"].forEach(function(method)  {
+                    setLogger: function (logger) {
+                        this.logger = logger || {};
+                        var self = this;
+                        ["log", "info", "debug", "warn", "error"].forEach(function (method) {
                             if (typeof self.logger[method] != "function") {
                                 self.logger[method] = function () {
-                                    console.log.apply(console, 
-                                    [method.toUpperCase() + ": "].concat(Array.prototype.slice.apply(arguments)));
+                                    console.log.apply(console,
+                                        [method.toUpperCase() + ": "].concat(Array.prototype.slice.apply(arguments)));
                                 }
                             }
                         })
                     },
 
                     sendMessageError: function (message) {
-                        if (!message){
+                        if (!message) {
                             return;
                         }
                         this.sendMessage({
@@ -280,7 +280,7 @@ function initAmtechObjects(window) {
                             message = {
                                 summary: message,
                                 detail: '',
-                                severity:  window.amtech.console.utils.SEVERITY.ERROR
+                                severity: window.amtech.console.utils.SEVERITY.ERROR
                             }
                         } else if (typeof message != "object") {
                             this.logger.error("Invalid error message " + message);

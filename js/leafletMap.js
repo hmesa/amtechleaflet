@@ -129,6 +129,13 @@
                     cfg[key] = this._defaults[key];
                 }
             }
+            var attributionAmtech='<a href="http://www.amtech.solutions" title="Activity Monitoring Technology">AMTech</a>';
+            var options = cfg.tileLayerOptions;
+            if (typeof options.attribution != "undefined") {
+                options.attribution += ( ' | '+attributionAmtech);
+            } else {
+                options.attribution = attributionAmtech;
+            }
 
             var isOnControlSettings = [
                 [this.CONTROLS.LOCATEME, "withLocateMeControl"],
@@ -139,7 +146,7 @@
                 [this.CONTROLS.EDIT_STATE, "withEditStateControl"],
                 [this.CONTROLS.LINK_SEARCH, "withLinkSearchControl"]
             ];
-            var self=this;
+            var self = this;
             isOnControlSettings.forEach(function (keyValue) {
                 self[self._getControlId(keyValue[0]) + "_isShown"] = cfg[keyValue[1]];
             });
@@ -149,6 +156,7 @@
         initConstants: function () {
 
             this.CONTROLS = {
+                AMTECH: "Amtech",
                 LOCATEME: "locateMySelf",
                 ZOOM: "zoom",
                 RESIZER: "containerResizer",
@@ -647,7 +655,7 @@
             return this;
         },
         initializeSpiderfier: function () {
-            var self=this;
+            var self = this;
             this.oms = new OverlappingMarkerSpiderfier(this.map);
             this.oms.addListener('click', function (marker) {
                 self.onClickEntityLayer(undefined, marker);
@@ -1143,7 +1151,6 @@
                     });
                 }
 
-
             }
         },
         onMouseOverProximityAreaLayer: function (event) {
@@ -1281,6 +1288,13 @@
         },
         setControlsToMap: function () {
             if (this.map) {
+                var self = this;
+                //adding amtech
+                var control = self.getControl(self.CONTROLS.AMTECH);
+                if (control && control != null) {
+                    control.addTo(self.map);
+                }
+
                 var controls = [
                     this.CONTROLS.ZOOM,
                     this.CONTROLS.LOCATEME,
@@ -1691,6 +1705,7 @@
          */
         createControl: function (id, options) {
             switch (id) {
+                case this.CONTROLS.AMTECH: return this.createAmtechImageControl(options);
                 case this.CONTROLS.LOCATEME: return this.createLocateMySelfControl(options);
                 case this.CONTROLS.ZOOM: return this.createLocalizedZoomControl(options);
                 case this.CONTROLS.RESIZER: return this.createResizeControl(options);
@@ -1699,6 +1714,16 @@
                 case this.CONTROLS.LINK_SEARCH: return this.createLinkSearchControl(options);
             }
             return null;
+        },
+        createAmtechImageControl: function () {
+            if (!L.Control.HyperlinkImage) {
+                if (amtech.console.defineLeafletImageControl) {
+                    amtech.console.defineLeafletImageControl(L);
+                } else {
+                    return null;
+                }
+            }
+            return new L.Control.HyperlinkImage();
         },
         createLocateMySelfControl: function () {
             if (!L.Control.LocateMySelf) {
@@ -1741,8 +1766,8 @@
                 [getMessage("Floorplans"), this.layerFloorplans]];
             // overlays
             var overlays = {};
-            keyValues.forEach( function(keyValue){
-                overlays[keyValue[0]]=keyValue[1];
+            keyValues.forEach(function (keyValue) {
+                overlays[keyValue[0]] = keyValue[1];
             })
             return new L.Control.Layers(baseLayers, overlays, options);
         },
@@ -1994,4 +2019,28 @@
             }
 
         });
+
+    amtech.console.defineLeafletImageControl = function (L) {
+        L.Control.HyperlinkImage = L.Control
+            .extend({
+                options: {
+                    position: 'topright',
+                    title: "AMTech solutions",
+                    src: "http://wiki.amtech.mx/mediawiki/resources/assets/amtech-mini.png",
+                    href: "http://www.amtech.solutions"
+                },
+                onAdd: function (map) {
+                    var controlDiv = L.DomUtil.create('div', 'leaflet-bar');
+                    L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation);
+
+                    var controlUI = L.DomUtil.create('a', 'map-amtech', controlDiv);
+                    controlUI.title = this.options.title;
+                    controlUI.href = this.options.href;
+                    controlUI.target = "_blank";
+                    var icon = L.DomUtil.create("img", "", controlUI);
+                    icon.src = this.options.src;
+                    return controlDiv;
+                }
+            });
+    }
 })(window)
