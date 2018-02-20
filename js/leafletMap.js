@@ -647,12 +647,13 @@
             return this;
         },
         initializeSpiderfier: function () {
+            var self=this;
             this.oms = new OverlappingMarkerSpiderfier(this.map);
             this.oms.addListener('click', function (marker) {
-                this.onClickEntityLayer(undefined, marker);
+                self.onClickEntityLayer(undefined, marker);
             });
             this.oms.addListener('spiderfy', function (markers) {
-                this.map.closePopup();
+                self.map.closePopup();
             });
         },
         updateImageOverlays: function () {
