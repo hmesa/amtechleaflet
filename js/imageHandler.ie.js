@@ -162,7 +162,7 @@
                         return false;
                     }
                     if (response && response.length > 0) {
-                        var string = '.' + className + '::before{ content:' + self.getCssContentForUrl(response) + ';}';
+                        var string = '.' + className + '{ background-image:' + self.getCssContentForUrl(response) + ';}';
                         var styleId = 'entityClass_' + className;
                         var style = self.stylesContainerDiv.find('#' + styleId);
                         if (style.length == 0) {
