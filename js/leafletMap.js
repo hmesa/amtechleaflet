@@ -202,7 +202,7 @@
 
             var iconOptions = {
                 className: defaultOptions.className || '',
-                html: '<div class="' + iconClass + '">&nbsp;</div>',
+                html: '<div class="map-icon ' + iconClass + '">&nbsp;</div>',
                 iconSize: null, // size of the icon
                 iconAnchor: null, // point of the icon which will
                 // correspond to marker's location

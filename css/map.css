@@ -78,11 +78,15 @@
     margin-left: -20px;
     margin-top: -58px;
 }
-
+.map-icon{
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+}
 .map-selected-items div {
     height: 32px;
     width: 32px;
-    background-size: 32px;
     margin-left: 4px !important;
     margin-top: 4px !important;
     z-index: 900 !important;
@@ -107,7 +111,6 @@
 .map-editing div {
     height: 4px !important;
     width: 4px !important;
-    background-size: 4px !important;
     margin-left: 1px !important;
     margin-top: 1px !important;
 }
@@ -157,7 +160,6 @@
 .map-all-items div {
     height: 16px;
     width: 16px;
-    background-size: 16px;
     margin-left: 2px;
     margin-top: 2px;
     z-index: 850 !important;
@@ -190,7 +192,6 @@
 .map-item-edited div {
     height: 32px;
     width: 32px;
-    background-size: 32px;
     margin-left: 4px !important;
     margin-top: 4px !important;
     z-index: 950 !important;
@@ -251,7 +252,6 @@
 .map-timeline div {
     height: 16px;
     width: 16px;
-    background-size: 16px;
     margin-left: 2px !important;
     margin-top: 2px !important;
 }
