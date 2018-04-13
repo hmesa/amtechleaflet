@@ -252,7 +252,7 @@
                                     data.floorplan.imageurl = response;
                                     if (this.mapWidget.hasElement(url)) {
                                         this.mapWidget.updateElement({
-                                            url: url,
+                                            "@id": url,
                                             floorplan: {
                                                 location: floorplanLocationJson,
                                                 imageurl: response

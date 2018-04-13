@@ -925,8 +925,9 @@
             var overlay = L.imageOverlay.rotated(floorplan.imageurl, points[0], points[1], points[2], {
                 opacity: this.cfg.overlayOpacity || .4
             });
+            var self=this;
             overlay.on('load', function (e) {
-                this.logger.debug("overlay on load");
+                self.logger.debug("overlay on load");
                 e.target._reset();
                 clbk();
             });
