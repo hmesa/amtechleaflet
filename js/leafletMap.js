@@ -1303,7 +1303,6 @@
                     this.CONTROLS.LINK_SEARCH,
                     this.CONTROLS.COORDINATE
                 ];
-                var self = this;
                 controls.forEach(function (controlId) {
                     if (self.isControlOn(controlId)) {
                         var control = self.getControl(controlId);
@@ -1481,6 +1480,65 @@
             this.map.removeLayer(this.layerOverlays);
             this._shownLayerOverlays = false;
 
+        },
+        getCalibrationControlPoints: function (wkt) {
+            var leftTop, rightTop, leftBottom;
+            var bounds = this.map.getBounds();
+            var e = bounds.getEast();
+            var n = bounds.getNorth();
+            var w = bounds.getWest();
+            var s = bounds.getSouth();
+
+            var newEast;
+            var newWest;
+            var newNorth;
+            var newSouth;
+
+            if (!wkt || wkt.length == 0) {
+
+                newEast = (3 * e + w) / 4;
+                newWest = (3 * w + e) / 4;
+                newNorth = (3 * n + s) / 4;
+                newSouth = (3 * s + n) / 4;
+
+                leftTop = [newNorth, newWest];
+                rightTop = [newNorth, newEast];
+                leftBottom = [newSouth, newWest];
+            } else {
+                var shape = wktParser.getGeometry(wkt);
+                var coords = wktParser.parseCoordinates(wkt, this.getIsLatLng())
+                var r = 0;
+                switch (shape) {
+                    case GEOMETRY.CIRCLE:
+                        coords = coords[0];
+                    case GEOMETRY.POINT:
+                        var newEast = (e + coords[1]) / 4;
+                        var newWest = (w + coords[1]) / 4;
+                        var newNorth = (n + coords[0]) / 4;
+                        var newSouth = (s + coords[0]) / 4;
+
+                        leftTop = [newNorth, newWest];
+                        rightTop = [newNorth, newEast];
+                        leftBottom = [newSouth, newWest];
+                        break
+                    case GEOMETRY.RECTANGLE:
+
+                        leftTop = [coords[1][0], coords[0][1]];
+                        rightTop = [coords[1][0], coords[1][1]];
+                        leftBottom = [coords[0][0], coords[0][1]];
+                        break
+                    case GEOMETRY.POLYGON:
+                    case GEOMETRY.POLYLINE:
+                        leftTop = coords[0][0];
+                        rightTop = coords[0][1];
+                        leftBottom = coords[0][2];
+                        break;
+                    default:
+                        this.logger.error("unhandled geometry");
+                        return undefined
+                }
+            }
+            return [L.latLng(leftTop), L.latLng(rightTop), L.latLng(leftBottom)];
         },
         getWKTfromLayer: function (layer) {
             return wktParser.stringify(layer, this.cfg.isLatLng);

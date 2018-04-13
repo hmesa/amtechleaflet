@@ -53,8 +53,8 @@
         init: function (cfg) {
             this.setLogger(cfg.logger);
         },
-        setLogger(logger) {
-            this.logger = logger || console;
+        setLogger: function (logger) {
+            this.logger = logger || window.console;
         },
         addParamsToUrl: function (url, paramsObj) {
             if (!paramsObj) {
@@ -79,7 +79,7 @@
         },
 
         validateDapResponse: function (data) {
-            var errorMsg="";
+            var errorMsg = "";
             if (!data) {
                 errorMsg = "There was no response";
             } else if (data["@type"] == "/amtech/linkeddata/types/composite/outputMsg" &&
@@ -97,7 +97,7 @@
         }
 
     });
-    class RestCallError extends Error{
+    class RestCallError extends Error {
         constructor(message, data, statusCode, response) {
             super(message);
             this.data = data;

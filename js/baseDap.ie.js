@@ -54,7 +54,7 @@
             this.setLogger(cfg.logger);
         },
         setLogger: function (logger) {
-            this.logger = logger || console;
+            this.logger = logger || window.console;
         },
         addParamsToUrl: function (url, paramsObj) {
             if (!paramsObj) {
