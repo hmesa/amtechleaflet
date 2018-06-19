@@ -91,6 +91,8 @@
             withZoomControl: true,
             withLinkSearchControl: false,
 
+            __showLabels:false,
+            permanentLabels:false
         },
         init: function (cfg) {
             this.initConstants();
@@ -123,7 +125,16 @@
                     cfg.center = undefined;
                 }
             }
+            if (typeof cfg.permanentLabels=="number"){
+                cfg.permanentLabels=[cfg.permanentLabels,undefined];
+            }else if(Array.isArray(cfg.permanentLabels)){
+                if (cfg.permanentLabels.length==0){
+                    cfg.permanentLabels=true;
 
+                }else if(cfg.permanentLabels.length==1){
+                    cfg.permanentLabels.push(undefined);
+                }
+            }
             for (var key in this._defaults) {
                 if (typeof cfg[key] === "undefined") {
                     cfg[key] = this._defaults[key];
@@ -1027,16 +1038,15 @@
         },
         verifyTooltipVisibility: function (lastZoom, newZoom) {
 
-            if (Array.isArray(this.cfg.permanentLabels)) {
+            if (this.__showLabels && Array.isArray(this.cfg.permanentLabels)) {
 
                 var permanent = this.__isInsideZoomRange(newZoom, this.cfg.permanentLabels);
                 if (typeof lastZoom == "undefined" || this.__isInsideZoomRange(lastZoom, this.cfg.permanentLabels) != permanent) {
-                    this.makeTooltipsPermanent(this.layerAllItems, permanent);
-                    this.makeTooltipsPermanent(this.layerActiveItems, permanent);
+                    this.makeTooltipsPermanent(permanent);
                 }
             }
         },
-        makeTooltipsPermanent: function (layers, permanent) {
+        makeTooltipsPermanent: function (permanent) {
             var forEach = function (l) {
 
                 var marker = l.theMarker;
@@ -1048,21 +1058,25 @@
                 };
 
             }
-            if (Array.isArray(layers)) {
-                layers.forEach(forEach);
-            } else {
-                if (!layers) {
-                    layers = this.map;
+            this.layerAllItems.eachLayer(forEach);
+            this.layerActiveItems.eachLayer(forEach);
+        },
+        toggleLabels(visible) {
+            if (visible != this.__showLabels) {
+                this.__showLabels=visible;
+                if (!visible) {
+                    this.makeTooltipsPermanent(false);
+                }else{
+                    this.makeTooltipsPermanent(this.isPermanentLabels());
                 }
-                layers.eachLayer(forEach);
             }
+            return this;
         },
         __isInsideZoomRange(zoom, range) {
             return !(zoom > this.cfg.permanentLabels[1]) && !(zoom < this.cfg.permanentLabels[0]);
-
         },
         isPermanentLabels() {
-            if (!this.cfg.permanentLabels) {
+            if (!this.cfg.permanentLabels || !this.__showLabels) {
                 return false;
             } else {
                 if (Array.isArray(this.cfg.permanentLabels)) {
