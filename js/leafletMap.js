@@ -129,10 +129,10 @@
                     cfg[key] = this._defaults[key];
                 }
             }
-            var attributionAmtech='<a href="http://www.amtech.solutions" title="Activity Monitoring Technology">AMTech</a>';
+            var attributionAmtech = '<a href="http://www.amtech.solutions" title="Activity Monitoring Technology">AMTech</a>';
             var options = cfg.tileLayerOptions;
             if (typeof options.attribution != "undefined") {
-                options.attribution += ( ' | '+attributionAmtech);
+                options.attribution += (' | ' + attributionAmtech);
             } else {
                 options.attribution = attributionAmtech;
             }
@@ -199,7 +199,6 @@
             var icon;
 
             var iconClass = data.icon || '';
-
             var iconOptions = {
                 className: defaultOptions.className || '',
                 html: '<div class="map-icon ' + iconClass + '">&nbsp;</div>',
@@ -245,7 +244,6 @@
             }
         },
         createMap: function () {
-
             // console.log("initializing map");
             this.create();
             this.setTileLayer();
@@ -925,7 +923,7 @@
             var overlay = L.imageOverlay.rotated(floorplan.imageurl, points[0], points[1], points[2], {
                 opacity: this.cfg.overlayOpacity || .4
             });
-            var self=this;
+            var self = this;
             overlay.on('load', function (e) {
                 self.logger.debug("overlay on load");
                 e.target._reset();
@@ -1027,6 +1025,53 @@
             }
             return fullLayer;
         },
+        verifyTooltipVisibility: function (lastZoom, newZoom) {
+
+            if (Array.isArray(this.cfg.permanentLabels)) {
+
+                var permanent = this.__isInsideZoomRange(newZoom, this.cfg.permanentLabels);
+                if (typeof lastZoom == "undefined" || this.__isInsideZoomRange(lastZoom, this.cfg.permanentLabels) != permanent) {
+                    this.makeTooltipsPermanent(this.layerAllItems, permanent);
+                    this.makeTooltipsPermanent(this.layerActiveItems, permanent);
+                }
+            }
+        },
+        makeTooltipsPermanent: function (layers, permanent) {
+            var forEach = function (l) {
+
+                var marker = l.theMarker;
+                if (marker.getTooltip && marker.getTooltip()) {
+                    var tooltip = marker.getTooltip();
+                    marker.unbindTooltip().bindTooltip(tooltip, {
+                        permanent: permanent
+                    })
+                };
+
+            }
+            if (Array.isArray(layers)) {
+                layers.forEach(forEach);
+            } else {
+                if (!layers) {
+                    layers = this.map;
+                }
+                layers.eachLayer(forEach);
+            }
+        },
+        __isInsideZoomRange(zoom, range) {
+            return !(zoom > this.cfg.permanentLabels[1]) && !(zoom < this.cfg.permanentLabels[0]);
+
+        },
+        isPermanentLabels() {
+            if (!this.cfg.permanentLabels) {
+                return false;
+            } else {
+                if (Array.isArray(this.cfg.permanentLabels)) {
+                    return this.__isInsideZoomRange(this.map.getZoom(), this.cfg.permanentLabels);
+                } else {
+                    return true;
+                }
+            }
+        },
         bindPopupAndLabel: function (fullLayer, data) {
             var label = data.shortName;
             var labelDefinition = this.cfg.labelDefinition;
@@ -1039,10 +1084,11 @@
             } else {
                 layer = fullLayer.theLayer;
             }
+            var permanent = this.isPermanentLabels();
             layer.bindTooltip(label, {
                 className: this.STYLES.LABEL,
-                permanent: false
-            });
+                permanent: permanent
+            }).openTooltip();
             /*
                         fullLayer
                             .bindPopup("<h3>" + data._name + "</h3>"
@@ -1267,6 +1313,16 @@
             if (!this.map) {
                 this.sendMessageError(getMessage("MapNotReady"));
                 return this;
+            }
+            var self = this;
+            if (Array.isArray(this.cfg.permanentLabels)) {
+                var lastZoom;
+                var onZoomend = function () {
+                    var zoom = self.map.getZoom();
+                    self.verifyTooltipVisibility(lastZoom, self.map.getZoom());
+                    lastZoom = zoom;
+                }
+                this.map.on("zoomend", onZoomend);
             }
 
             this.map.on("moveend", this.fireViewChangeEvent, this);

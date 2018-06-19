@@ -4,6 +4,7 @@
 <head>
     <!--<meta name="viewport" content=" initial-scale = 0.5, user-scalable = no">-->
     <meta name="viewport" content="initial-scale = 0.5, maximum-scale = 0.5, minimum-scale = 0.5, user-scalable = no">
+
     <title>Amtech IoT demo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
@@ -69,7 +70,7 @@
 
     </div>
     <script lang="js">
-      
+
         //logger creation
         function prepareLog(level, text) {
             return "[" + new Date().toISOString() + "] " + level.toUpperCase() + " - " + text;
@@ -94,9 +95,16 @@
         entityCssClassesDiv.html('');
         //resource label template function
         function labelTemplateFcn(data) {
-            return "name: " + data._name +
-                "<br/>type:" + data["@type"].replace(amtech.console.PATHS.TYPE_ENTITY+"/","") +
+            
+            return data._name;
+            
+            /*return "name: " + data._name +
+                "<br/>type:" + data["@type"].replace(amtech.console.PATHS.TYPE_ENTITY + "/", "") +
                 "<br/>description: " + data.description + "<br/>"
+                */
+        }
+        function iconMsgDefinition(data) {
+            return data._name;
         }
 
         //map widget creation
@@ -126,7 +134,8 @@
                 canSelect: true,
                 animation: false,
 
-                labelDefinition: labelTemplateFcn
+                labelDefinition: labelTemplateFcn,
+                permanentLabels:[13,undefined]
 
             });
             mapWidget.toggleChangeNotificationsActivated(false);
@@ -168,6 +177,7 @@
             getLogger().debug("initializing map promises");
             try {
                 mapPromises = createMapPromises(getMapWidget(), getDapClient(), wktParser);
+                mapPromises.cacheExpirationTime=30000;        
                 mapPromises.setLogger(getLogger().withFixExecInfo("MapPromises", " : "));
 
                 mapPromises.getImageHandler().setCssStyleContainerDiv(entityCssClassesDiv);
@@ -194,14 +204,15 @@
             getMapWidget().addEventListener("map:elementclick", (data) => {
                 alert("Clicked on " + data.url);
             })
-            for (label in observerUrls) {              
-                var $a = $("<h2>").click((function(url){
-                    return function(){
-                    getMapPromises().clearMap();
-                    getMapPromises().addQueryResults(url).then(function(response){
-                        return getMapPromises().centerToLayers(response)
-                    }, function(error){console.log(error)});
-                };}(observerUrls[label]))).appendTo($("#options"));
+            for (label in observerUrls) {
+                var $a = $("<h2>").click((function (url) {
+                    return function () {
+                        getMapPromises().clearMap();
+                        getMapPromises().addQueryResults(url).then(function (response) {
+                            return getMapPromises().centerToLayers(response)
+                        }, function (error) { console.log(error) });
+                    };
+                }(observerUrls[label]))).appendTo($("#options"));
                 $a.text(label);
             }
         });

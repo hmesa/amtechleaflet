@@ -36,10 +36,10 @@
                     this.setStatus("__map", undefined)
                 }
             });
-            this.setLogger( logger );
+            this.setLogger(logger);
         }
         setLogger(logger) {
-            this.logger = logger||console;
+            this.logger = logger || console;
             this.imageHandler.setLogger(logger);
         }
         clearMap() {
@@ -199,10 +199,10 @@
                     this.setStatus(id, "loading");
                     this.imageCache[itemType] = this.imageHandler.setClassForUrl(itemType, data.icon, true)
                         .then(
-                        (response) => { this.logger.debug(" loaded image for " + itemType); return response }
+                            (response) => { this.logger.debug(" loaded image for " + itemType); return response }
                         ).then(
-                        (response) => { this.setStatus(id); return response },
-                        (error) => { this.setStatus(id); throw error }
+                            (response) => { this.setStatus(id); return response },
+                            (error) => { this.setStatus(id); throw error }
                         );;
                 }
                 iconData = this.imageCache[itemType];
@@ -306,8 +306,8 @@
                 })
                 .then(this.addElements.bind(this))
                 .then(
-                (response) => { this.setStatus(queryUrl, undefined); return response },
-                (error) => { this.setStatus(queryUrl); throw error }
+                    (response) => { this.setStatus(queryUrl, undefined); return response },
+                    (error) => { this.setStatus(queryUrl); throw error }
                 );
 
         }
@@ -330,7 +330,7 @@
                 }).then(
                     (response) => { this.setStatus(item, undefined); return response },
                     (error) => { this.setStatus(item); throw error }
-                    )
+                )
             });
             //return Q.all(elemPromises);
             return Promise.all(elemPromises);
@@ -393,7 +393,7 @@
             }).then(
                 (response) => { this.setStatus("__map", undefined); return response },
                 (error) => { this.setStatus("__map"); throw error }
-                )
+            )
         }
     }
     var createMapPromises = function (mapWidget, dapClient, wktParser) {
