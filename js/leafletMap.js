@@ -1062,6 +1062,9 @@
             this.layerActiveItems.eachLayer(forEach);
         },
         toggleLabels(visible) {
+            if (typeof visible=="undefined"){
+                visible = !this.__showLabels;
+            }
             if (visible != this.__showLabels) {
                 this.__showLabels=visible;
                 if (!visible) {
