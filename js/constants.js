@@ -14,12 +14,17 @@
         FIELDS: {
             NAME: "_name",
             ID: "@id",
-            TYPE: "@type"
+            TYPE: "@type",
+            LOCATION: "location"
         },
         PATHS: {
             TYPES: PATH_TYPES,
             ENTITIES: PATH_ENTITIES,
+            TRACKERS:PATH_ENTITIES+"/smartTracker",
+            ROOT:"/amtech",
 
+            TYPE_ENTITY:getThingTypeUrl(""), 
+            TYPE_TRACKER:getThingTypeUrl("smartTracker"),
             TYPE_GEOFENCE: getThingTypeUrl("geofence"),
             TYPE_M2MBRIDGE: getThingTypeUrl("amtechM2mBridge")
         },

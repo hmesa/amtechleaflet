@@ -1,16 +1,15 @@
 (function (window) {
-    "use strict"
+    "use strict";
     var dap = window.dap;
     if (!dap) {
         if (typeof require == "function") {
-            var dap = require("./baseDap.js");
+            dap = require("./baseDap.js");
         }
-    } 
-    if (!dap ||!dap.DapBaseController) {
+    }
+    if (!dap || !dap.DapBaseController) {
         throw new Error("Missing import: unknown class DapBaseController");
-    } 
+    }
     var RestCallError = window.dap.RestCallError;
-    var STATUS_CODES = window.dap.STATUS_CODES;
     var DapController = window.dap.DapBaseController;
 
     var HttpRequestRestCaller = window.dap.RestCaller.extend({
@@ -25,33 +24,25 @@
             cred.timeout = this._timeoutMs || 60000;
             return cred;
         },
-        setCredentials: function (user, password) {
-            if (!user || !password) {
-                this.loginCredentials = undefined;
-                return;
-            } else if (this.loginCredentials != undefined) {
-                var cred = this.loginCredentials();
-                if (cred.user == user && cred.password == password) {
-                    return;
-                }
-            }
-            this.loginCredentials = function() {
-                return {
-                    username: user,
-                    password: password,
-                };
-            }
-            this.logger.debug("setting credentials");
-        },
         getUrlToDap: function (resourceUri, paramsObj) {
             return this.addParamsToUrl(this.dapUrl + resourceUri, paramsObj);
         },
-        get:function(url, paramsObj, done) {
+        delete(url, paramsObj,done) {
+             return this._restCall( "DELETE", [this.getUrlToDap(url, paramsObj), this.loginCredentialsAndRestOptions()],done);
+        },
+        get: function (url, paramsObj, done) {
             return this._restCall("GET", [this.getUrlToDap(url, paramsObj), this.loginCredentialsAndRestOptions()], done);
         },
-        getBinary:function(url, paramsObj, done) {
+        getBinary: function (url, paramsObj, done) {
             return this._restCallBinary("GET", [this.getUrlToDap(url, paramsObj), this.loginCredentialsAndRestOptions()], done);
         },
+        post:function(url, json, paramsObj,done) {
+            return this._restCall( "POST", [this.getUrlToDap(url, paramsObj), JSON.stringify(json), this.loginCredentialsAndRestOptions()],done);
+        },
+        put:function(url, json, paramsObj,done) {
+            return this._restCall( "PUT", [this.getUrlToDap(url, paramsObj), JSON.stringify(json), this.loginCredentialsAndRestOptions()],done);
+        },
+
         validateRestResponse: function (data, response) {
             var errorMsg = undefined;
             var statusCode = (response.statusCode != undefined) ? response.statusCode : response.status;
@@ -99,7 +90,7 @@
                                     var split = hContentType.split(';');
                                     var contentTypeArr = split.splice(0, 1);
                                     contentType = contentTypeArr[0];
-                                    split.forEach(function(item) {
+                                    split.forEach(function (item) {
                                         var keyValue = item.split("=");
                                         switch (keyValue[0]) {
                                             case "charset":
@@ -110,7 +101,7 @@
                                             default:
                                                 logger.debug("Unknown key " + item);
                                         }
-                                    })
+                                    });
                                 }
                                 if (typeof options.stringParser == "function") {
                                     data = options.stringParser(this.responseText, contentType);
@@ -130,7 +121,7 @@
 
                             } else if (this.status > 0) {
 
-                                var msg = this.statusText;
+                                msg = this.statusText;
                                 if (typeof this.response == "string") {
                                     var json;
                                     try {
@@ -162,7 +153,7 @@
                 }
                 if (options.timeout) {
                     req.timeout = options.timeout;
-                    req.ontimeout = function() {
+                    req.ontimeout = function () {
                         done(new RestCallError("Timeout with request to " + url, undefined, this.status, this));
                     }
                 }
@@ -187,10 +178,10 @@
         },
         _restCallBinary: function (type, args, done) {
             try {
-                var parser = function(request, contentType) {
+                var parser = function (request, contentType) {
                     // make a copy of the response
                     return request.response;
-                }
+                };
                 var options = (args && args.length > 1) ? args[args.length - 1] : {};
                 options.parser = parser;
                 options.responseType = "blob";
@@ -201,7 +192,7 @@
             }
         }
     });
-    HttpRequestRestCaller = HttpRequestRestCaller;
+    //HttpRequestRestCaller = HttpRequestRestCaller;
     dap.createDapClient = function (logger, dapUrl, user, password) {
         var restCaller = new HttpRequestRestCaller({
             logger: logger,
@@ -215,6 +206,6 @@
     if (typeof module !== "undefined") {
         module.exports = dap.createDapClient;
     } else {
-        window.dap=dap;
+        window.dap = dap;
     }
 })(this);

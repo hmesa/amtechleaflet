@@ -36,6 +36,34 @@ function initAmtechObjects(window) {
     if (!window.amtech) {
         window.amtech = {};
     }
+    SEVERITY= {
+        INFO: "info",
+        WARN: "warn",
+        ERROR: "error",
+        FATAL: "fatal"
+    };
+    var prepareMessage=function(message,severity){
+        if (!message ||message=="") {
+            return;
+        }
+        if (typeof message == "string") {
+            message={
+                summary: message
+            }
+        } else if (typeof message != "object") {
+            this.logger.error("Invalid error message " + message);
+            return;
+        }
+
+        if (typeof severity != "undefined"){
+            message.severity=severity;
+        }else if (!message.severity){
+            message.severity=SEVERITY.ERROR;
+        }
+
+        message.detail = message.detail || "";
+    };
+
     if (!window.amtech.console) {
         window.amtech.console = {
             widgets: {},
@@ -57,12 +85,7 @@ function initAmtechObjects(window) {
             I18N: {},
             utils: {
                 classes: {},
-                SEVERITY: {
-                    INFO: "info",
-                    WARN: "warn",
-                    ERROR: "error",
-                    FATAL: "fatal"
-                },
+                SEVERITY: SEVERITY,
                 isString: function (instance) {
                     return typeof instance == "string"
                 },
@@ -85,7 +108,8 @@ function initAmtechObjects(window) {
                     // result:"+input.replaceAll("'","\\'").replaceAll("\"","\\\""));
                     return input.replace(/'/g, "\\'").replace(/"/g, "\\\"");
                 },
-                preparePFMessages: function (messages) {
+                prepareMessage:prepareMessage,
+                prepareMessages: function (messages) {
                     if (!messages || messages.length == 0) {
                         return [];
                     }
@@ -93,18 +117,7 @@ function initAmtechObjects(window) {
                         messages = [messages];
                     }
                     for (var i = 0; i < messages.length; i++) {
-                        message = messages[i];
-                        if (typeof message == "string") {
-                            messages[i] = {
-                                summary: message,
-                                detail: message
-                            };
-                            message = messages[i];
-                        }
-                        message.severity = message.severity
-                            || window.amtech.console.utils.SEVERITY.ERROR;
-                        message.detail = message.detail || "";
-
+                        messages[i]=prepareMessage(messages[i]);
                     }
                     return messages;
                 },
@@ -167,15 +180,6 @@ function initAmtechObjects(window) {
                         + ((m < 30) ? "00" : "30");
                 }
             },
-            constants: {
-                PROP_TYPE: "@type",
-                PROP_ID: "@id",
-                PROP_location: "location"
-            },
-            PATHS: {
-                TYPE_ENTITY: "/amtech/linkeddata/types/composite/entity",
-                ENTITIES: "/amtech/things/entities"
-            }
 
         };
     }
@@ -266,29 +270,29 @@ function initAmtechObjects(window) {
                             }
                         })
                     },
-
-                    sendMessageError: function (message) {
-                        if (!message) {
+                    sendMessage:function(message,severity){
+                        var message=prepareMessage(message,severity);
+                        if (!message){
                             return;
                         }
-                        this.sendMessage({
-                            severity: window.amtech.console.utils.SEVERITY.ERROR,
-                            summary: summary,
-                            detail: detail
-                        });
-                        if (typeof message == "string") {
-                            message = {
-                                summary: message,
-                                detail: '',
-                                severity: window.amtech.console.utils.SEVERITY.ERROR
-                            }
-                        } else if (typeof message != "object") {
-                            this.logger.error("Invalid error message " + message);
-                            return;
-                        }
-
-                        this.logger.debug("Error message received " + JSON.stringify(message));
+                        this.logger.debug("Message sent " + JSON.stringify(message));
+                        if (message.severity==SEVERITY.ERROR){
                         this.fireEvent(this.EVENTS.ERROR, message);
+                        }else{
+                            this.fireEvent(this.EVENTS.MESSAGE, message);
+                        }
+                    },
+                    sendMessageError: function (message) {
+                        this.sendMessage(message,SEVERITY.ERROR);
+                    },
+                    sendMessageWarning:function (message) {
+                        this.sendMessage(message,SEVERITY.WARNING);
+                    },
+                    sendMessageInfo: function (message) {
+                        this.sendMessage(message,SEVERITY.INFO);
+                    },
+                    sendMessageFatal: function (summary, detail) {
+                        this.sendMessage(message,SEVERITY.FATAL);
                     },
 
                     setChildrenWidgets: function () {

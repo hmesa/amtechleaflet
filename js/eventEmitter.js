@@ -22,6 +22,10 @@
                     }
                     return this;
                 }
+                isDefined (arg) {
+                    return (typeof arg !== "undefined")
+                        && (arg != null)
+                }
                 addEventListenerOnce(eventTypes, eventHandler,
                     context) {
                     for (let elem of eventTypes.split()) {
@@ -154,6 +158,10 @@
 
                 }
 
+                isDefined (arg) {
+                    return (typeof arg !== "undefined")
+                        && (arg != null)
+                }
                 addEventListener(eventTypes, eventHandler,
                     context) {
                     var list, idx, handlers, isContextGiven, len;

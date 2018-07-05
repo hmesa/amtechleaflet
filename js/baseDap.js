@@ -56,6 +56,24 @@
         setLogger: function (logger) {
             this.logger = logger || window.console;
         },
+        setCredentials: function (user, password) {
+            if (!user || !password) {
+                this.loginCredentials = undefined;
+                return;
+            } else if (this.loginCredentials != undefined) {
+                var cred = this.loginCredentials();
+                if (cred.username == user && cred.password == password) {
+                    return;
+                }
+            }
+            this.loginCredentials = function() {
+                return {
+                    username: user,
+                    password: password,
+                };
+            }
+            this.logger.debug("setting credentials");
+        },
         addParamsToUrl: function (url, paramsObj) {
             if (!paramsObj) {
                 return url;
@@ -163,6 +181,63 @@
 
             });
         },
+        post: function (url, json, paramsObj) {
+            return new Promise((resolve, reject) => {
+                try {
+                    this.restCaller.post(
+                        url, json, paramsObj,
+                        (err, result) => {
+                            if (err != null) {
+                                reject(err);
+                            } else {
+                                resolve(result);
+                            }
+
+                        });
+                } catch (e) {
+                    reject(e);
+                }
+
+            });
+        },
+        put: function (url, json, paramsObj) {
+            return new Promise((resolve, reject) => {
+                try {
+                    this.restCaller.put(
+                        url, json, paramsObj,
+                        (err, result) => {
+                            if (err != null) {
+                                reject(err);
+                            } else {
+                                resolve(result);
+                            }
+
+                        });
+                } catch (e) {
+                    reject(e);
+                }
+
+            });
+        },
+        delete: function (url, paramsObj) {
+            return new Promise((resolve, reject) => {
+                try {
+                    this.restCaller.delete(
+                        url, paramsObj,
+                        (err, result) => {
+                            if (err != null) {
+                                reject(err);
+                            } else {
+                                resolve(result);
+                            }
+
+                        });
+                } catch (e) {
+                    reject(e);
+                }
+
+            });
+        },
         getResource: function (resourceUri) {
             return this.get(resourceUri)
                 .then((response) => {
@@ -178,6 +253,37 @@
                 })
 
         },
+        postResource(resource) {
+            var resourceUri = resource["@id"];
+            var resourceType= resource["@type"];
+            if (!resourceUri ||!resourceType){
+                return Promise.reject("Missing id or type in resource "+JSON.stringify(resource));
+            }
+            var url=window.CONSTANTS.PATHS.ROOT;
+            if (resourceUri.startsWith(window.CONSTANTS.PATHS.TYPES+"/")){
+                url = window.CONSTANTS.PATHS.TYPES;
+            }
+            return this.post( url, resource).then((response) => {
+                    this.logger.debug("Send \"new\" request for resource " + resourceUri);
+                    return response;
+                });
+        },
+        putResource: function (resource) {
+            var resourceUri = resource["@id"];
+            var resourceType= resource["@type"];
+            if (!resourceUri ||!resourceType){
+                return Promise.reject("Missing id or type in resource "+JSON.stringify(resource));
+            }
+            var url=window.CONSTANTS.PATHS.ROOT;
+            if (resourceUri.startsWith(window.CONSTANTS.PATHS.TYPES+"/")){
+                url=window.CONSTANTS.PATHS.TYPES;
+            }
+            return this.put(url, resource)
+                .then((response) => {
+                    this.logger.debug("Updated resource " + resourceUri);
+                    return response;
+                });
+        },
         getResourceSelfContained: function (resourceUri, mode) {
             var paramsObj = {};
             if (mode == undefined) {
@@ -189,7 +295,7 @@
             return this.get(resourceUri, paramsObj);
         },
         getResourceField: function (resourceUri, field, contentType) {
-            parmsObj = {
+            var parmsObj = {
                 property: field
             };
             if (contentType) {
@@ -263,6 +369,138 @@
                 throw error;
                 // return undefined;
             })
+        },
+        setCredentials(user,password){
+            this.restCaller.setCredentials(user,password);
+        },
+        getBridgeInstancesByMacAddress(macAddress) {
+            if (!macAddress || macAddress.length == 0) {
+                return Promise.resolve(undefined);
+            }
+            return this.getQueryResults("/amtech/system/queries/thingsbytype", {
+                typeUrl: "/amtech/linkeddata/types/composite/entity/amtechM2mBridge",
+                selfContained: "true",
+                "/amtech/system/queries/thingsbytype/constraints": JSON.stringify([{
+                    "@id": "/amtech/system/queries/thingsbytype/constraints/_name",
+                    _name: "_name",
+                    field: "_name",
+                    _fieldUri: "/amtech/linkeddata/types/composite/entity/amtechM2mBridge/_name",
+                    "@type": "/amtech/linkeddata/types/composite/constraint/stringregex",
+                    operator: "regex",
+                    paramsList: [
+                        "regex"
+                    ],
+                    regex: ".*:" + macAddress
+                }])
+            }).then((response) => {
+                let content;
+                if (!response.contentType) {
+                    content = response;
+                } else if (response.contentType == "application/json") {
+                    content = response.content;
+                }
+                if (content && !Array.isArray(content)) {
+                    content = [content];
+                }
+
+                return content;
+            })
+        },
+        getThingsInWkt(wkt, tenantToUse) {
+            var options = {
+                "geofence": wkt
+            };
+            if (tenantToUse && tenantToUse.length > 0) {
+                options["/amtech/system/queries/thingswithinwkt/constraints"] = [{
+                    "@type": "/amtech/linkeddata/types/composite/constraint/comparisonstring",
+                    "field": "_tenant",
+                    "_fieldUri": window.CONSTANTS.PATHS.TYPES + "/entity/_tenant",
+                    "operator": "eq",
+                    "value": tenantToUse
+                }]
+            };
+            return this.getQueryResults("/amtech/system/queries/thingswithinwkt", options);
+        },
+        deleteBridgeAndInstances(macAddress, tenantToUse) {
+            return this.getBridgeInstancesByMacAddress(macAddress).then((response) => {
+                if (!response || !response.length) {
+                    return response
+                } else {
+                    var list = [];
+                    var promises = response.map((bridge) => {
+                        let newPromise;
+                        let bridgeUri;
+                        let bridgeName;
+                        let bridgeInstances = undefined;
+                        if (typeof bridge == "string") {
+                            bridgeUri = bridge;
+                            bridgeName = bridge.substr(bridge.lastIndexOf("/") + 1);
+                        } else {
+                            bridgeUri = bridge["@id"];
+                            bridgeName = bridge._name;
+                            if (bridge.bridgeInstances && !Array.isArray(bridge.bridgeInstances)) {
+                                bridgeInstances = bridge.bridgeInstances.members;
+                            } else {
+                                bridgeInstances = bridge.bridgeInstances;
+                            }
+                        }
+                        newPromise = this.delete(bridgeUri);
+                        if (bridgeInstances && bridgeInstances.length > 0) {
+                            newPromise = newPromise.then((response) => {
+                                return this.deleteAll(bridgeInstances);
+                            });
+                        }
+                        return newPromise.then((ignored) => {
+                            return this.getQueryResults("/amtech/system/queries/thingsbytype", {
+                                typeUrl: "/amtech/linkeddata/types/composite/entity/geofence",
+                                "/amtech/system/queries/thingsbytype/constraints": JSON.stringify([{
+                                    "@id": "/amtech/system/queries/thingsbytype/constraints/_name",
+                                    _name: "_name",
+                                    field: "_name",
+                                    _fieldUri: "/amtech/linkeddata/types/composite/entity/amtechM2mBridge/_name",
+                                    "@type": "/amtech/linkeddata/types/composite/constraint/stringregex",
+                                    operator: "regex",
+                                    paramsList: [
+                                        "regex"
+                                    ],
+                                    regex: "geofence:" + bridgeName
+                                }])
+                            }).then((geofences) => {
+                                var mapPromises = geofences.map((geofence) => {
+                                    let loc = geofence.location;
+                                    return this.getThingsInWkt(loc.wkt || loc, tenantToUse).then((list) => {
+                                        var geofenceUrl = geofence["@id"];
+                                        var exist = false;
+                                        var i = -1;
+                                        while (!exist && ++i < list.length) {
+                                            exist = list[i]["@id"] == geofenceUrl;
+                                        }
+                                        if (!exist) {
+                                            list.push(geofence);
+                                        }
+                                        return this.deleteAll(list);
+                                    })
+                                });
+                                return Promise.all(mapPromises);
+                            })
+
+                        })
+                    });
+                    return Promise.all(promises);
+                }
+
+            })
+        },
+        deleteAll(list) {
+
+            var promiseArray = list.map((item) => {
+                if (item && typeof item !== "string") {
+                    item = item["@id"];
+                }
+                return (item) ? this.delete(item) : Promise.resolve();
+            });
+
+            return Promise.all(promiseArray);
         }
     });
     var dap = {

@@ -45,6 +45,7 @@
 
     <script type="text/javascript" src="./js/Leaflet.ImageOverlay.Rotated.js"></script>
 
+    <script type="text/javascript" src="./js/constants.js"></script>
     <script type="text/javascript" src="./js/class.js" lang="js"></script>
     <script type="text/javascript" src="./js/eventEmitter.js" lang="js"></script>
     <script type="text/javascript" src="./js/cssSafeCodec.js" lang="js"></script>
@@ -52,6 +53,7 @@
     <script type="text/javascript" src="./js/wktParser.js" lang="js"></script>
     <script type="text/javascript" src="./js/imageHandler.js"></script>
     <script type="text/javascript" src="./js/logger.js"></script>
+    <script type="text/javascript" src="./js/control.locateme.js"></script>
     <script type="text/javascript" src="./js/leafletMap.js"></script>
     <script type="text/javascript" src="./js/baseDap.js"></script>
     <script type="text/javascript" src="./js/dap.js"></script>
@@ -95,13 +97,8 @@
         entityCssClassesDiv.html('');
         //resource label template function
         function labelTemplateFcn(data) {
-            
+
             return data._name;
-            
-            /*return "name: " + data._name +
-                "<br/>type:" + data["@type"].replace(amtech.console.PATHS.TYPE_ENTITY + "/", "") +
-                "<br/>description: " + data.description + "<br/>"
-                */
         }
         function iconMsgDefinition(data) {
             return data._name;
@@ -135,7 +132,7 @@
                 animation: false,
 
                 labelDefinition: labelTemplateFcn,
-                permanentLabels:[15,undefined]
+                permanentLabels: [15, undefined]
 
             });
             mapWidget.toggleChangeNotificationsActivated(false);
@@ -171,16 +168,32 @@
             return dapClient;
         }
 
+        function clearIconClasses() {
+            entityCssClassesDiv.empty();
+        }
+        function updateIconClass(classData) {
+            var string = '.' + classData.className + '{ content:' + classData.content + ';}';
+            var styleId = 'entityClass_' + classData.className;
+            var style = entityCssClassesDiv.find('#' + styleId);
+            if (style.length == 0) {
+                entityCssClassesDiv.append('<style id="' + styleId + '">' + string
+                    + ';</style>');
+            } else {
+                style.html(string);
+            }
+            this.__log("debug", style.contents());
+        }
         //mapPromises function
         var mapPromises;
         function initMapPromises() {
             getLogger().debug("initializing map promises");
             try {
-                mapPromises = createMapPromises(getMapWidget(), getDapClient(), wktParser);
-                mapPromises.cacheExpirationTime=30000;        
-                mapPromises.setLogger(getLogger().withFixExecInfo("MapPromises", " : "));
+                mapPromises = createMapPromises(getMapWidget(), wktParser, logger);
+                mapPromises.cacheExpirationTime = 30000;
+                mapPromises.setDapClient(getDapClient());
 
-                mapPromises.getImageHandler().setCssStyleContainerDiv(entityCssClassesDiv);
+                mapPromises.addEventListener("amtech:class-clear", clearIconClasses);
+                mapPromises.addEventListener("amtech:class-updated", updateIconClass);
             } catch (e) {
                 getLogger().error(e.message);
                 throw e;

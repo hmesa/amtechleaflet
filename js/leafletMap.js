@@ -13,24 +13,30 @@
         amtech.I18N = {};
     }
     if (!amtech.I18N.MAP) {
-        amtech.I18N.MAP = {
-            'NoUrlGiven': "Missing url",
-            'MapNotReady': "The map is not ready yet",
-            'NoSelected': "No resource selected",
-            'NoLocationGiven': "No location given for resource",
-            'InvalidGeometry': "Invalid geometry {0}",
-            'UnknownEntity': "Unknown resource {0}",
-            'LocateMe': "Detect my position",
-            'contributors': "contributors",
+        amtech.I18N.MAP={};
+    }
+    
+    const MAP = {
+            "NoUrlGiven": "Missing url",
+            "MapNotReady": "The map is not ready yet",
+            "NoSelected": "No resource selected",
+            "NoLocationGiven": "No location given for resource",
+            "InvalidGeometry": "Invalid geometry {0}",
+            "UnknownEntity": "Unknown resource {0}",
+            "contributors": "contributors",
 
-            'ProximityAreas': "Proximity areas",
-            'Timeline': "Timeline",
-            'Things': "Things",
-            'Floorplans': "Floorplans",
+            "ProximityAreas": "Proximity areas",
+            "Timeline": "Timeline",
+            "Things": "Things",
+            "Floorplans": "Floorplans",
 
-            'ZoomIn': "Zoom in",
-            'ZoomOut': "Zoom out"
+            "ZoomIn": "Zoom in",
+            "ZoomOut": "Zoom out"
         };
+    for (var key in MAP){
+        if (!(key in amtech.I18N.MAP )){
+            amtech.I18N.MAP[key]=MAP[key];
+        }
     }
     function getMessage() {
         var args = arguments;
@@ -43,20 +49,20 @@
         }
     }
     amtech.console.widget.LeafletMap = amtech.console.widget.BaseWidget.extend({
-
         _defaults: {
             containerElement: null,
 
             //visualization
             resizeDelay: 100,
             overlayOpacity: 0.5,
-            labelTemplate: undefined,
+            labelDefinition: undefined,
+            popupDefinition: undefined,
 
             //interaction
             center: [0, 0],
             zoom: 19,
             maxZoomForCentering: 20,
-            active: '',
+            active: "",
 
             canSelect: true,
             onchange: null,
@@ -68,16 +74,15 @@
             markerZoomAnimation: false,
             zoomAnimation: false,
             fadeAnimation: false,
-            logger: console,
 
             //tilelayer
-            tileLayer: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            tileLayer: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
             tileLayerOptions: {
                 minNativeZoom: 3,
                 maxNativeZoom: 19,
                 minZoom: 3,
                 maxZoom: 25,
-                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> '
+                attribution: "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a> "
                     + (getMessage("contributors"))
             },
 
@@ -85,15 +90,16 @@
             spiderfy: true,
             allowUserInteractionOnCoordinates: false,
             withLocateMeControl: false,
-            withResizerControl: false,
             withLayerControl: false,
             withCoordinateControl: false,
             withZoomControl: true,
             withLinkSearchControl: false,
 
-            __showLabels:false,
-            permanentLabels:false
+            __showLabels: false,
+            permanentLabels: false,
+            logger: console
         },
+
         init: function (cfg) {
             this.initConstants();
             this._super(cfg);
@@ -106,64 +112,14 @@
             if (!this.cfg.delayedCreation) {
                 this.createMap();
             }
+
             this._selectedElement = undefined;
             this._elements = {};
             this._proximityAreas = {};
             this._mapSize = [0, 0];
 
         },
-        verifyCfg: function (cfg) {
-            cfg = this._super(cfg);
 
-            if (typeof cfg.center === "string") {
-                var string = cfg.center;
-                cfg.center = [];
-                string.split(",").forEach(function (item) {
-                    cfg.center.push(parseFloat(item))
-                });
-                if (cfg.center.length != 2) {
-                    cfg.center = undefined;
-                }
-            }
-            if (typeof cfg.permanentLabels=="number"){
-                cfg.permanentLabels=[cfg.permanentLabels,undefined];
-            }else if(Array.isArray(cfg.permanentLabels)){
-                if (cfg.permanentLabels.length==0){
-                    cfg.permanentLabels=true;
-
-                }else if(cfg.permanentLabels.length==1){
-                    cfg.permanentLabels.push(undefined);
-                }
-            }
-            for (var key in this._defaults) {
-                if (typeof cfg[key] === "undefined") {
-                    cfg[key] = this._defaults[key];
-                }
-            }
-            var attributionAmtech = '<a href="http://www.amtech.solutions" title="Activity Monitoring Technology">AMTech</a>';
-            var options = cfg.tileLayerOptions;
-            if (typeof options.attribution != "undefined") {
-                options.attribution += (' | ' + attributionAmtech);
-            } else {
-                options.attribution = attributionAmtech;
-            }
-
-            var isOnControlSettings = [
-                [this.CONTROLS.LOCATEME, "withLocateMeControl"],
-                [this.CONTROLS.RESIZER, "withResizerControl"],
-                [this.CONTROLS.LAYER, "withLayerControl"],
-                [this.CONTROLS.COORDINATE, "withCoordinateControl"],
-                [this.CONTROLS.ZOOM, "withZoomControl"],
-                [this.CONTROLS.EDIT_STATE, "withEditStateControl"],
-                [this.CONTROLS.LINK_SEARCH, "withLinkSearchControl"]
-            ];
-            var self = this;
-            isOnControlSettings.forEach(function (keyValue) {
-                self[self._getControlId(keyValue[0]) + "_isShown"] = cfg[keyValue[1]];
-            });
-            return cfg;
-
-        },
         initConstants: function () {
 
             this.CONTROLS = {
@@ -203,16 +159,69 @@
 
                 TIMELINE: "map-timeline",
                 TIMELINE_PATH: "map-timeline-path"
-            }
+            };
         },
 
+        verifyCfg: function (cfg) {
+            cfg = this._super(cfg);
+
+            if (typeof cfg.center === "string") {
+                var string = cfg.center;
+                cfg.center = [];
+                string.split(",").forEach(function (item) {
+                    cfg.center.push(parseFloat(item))
+                });
+                if (cfg.center.length != 2) {
+                    cfg.center = undefined;
+                }
+            }
+            if (typeof cfg.permanentLabels == "number") {
+                cfg.permanentLabels = [cfg.permanentLabels, undefined];
+            } else if (Array.isArray(cfg.permanentLabels)) {
+                if (cfg.permanentLabels.length == 0) {
+                    cfg.permanentLabels = true;
+
+                } else if (cfg.permanentLabels.length == 1) {
+                    cfg.permanentLabels.push(undefined);
+                }
+            }
+            for (var key in this._defaults) {
+                if (typeof cfg[key] === "undefined") {
+                    cfg[key] = this._defaults[key];
+                }
+            }
+
+            var attributionAmtech = "<a href=\"http://www.amtech.solutions\" title=\"Activity Monitoring Technology\">AMTech</a>";
+            var options = cfg.tileLayerOptions;
+            if (typeof options.attribution != "undefined") {
+                options.attribution += (" | " + attributionAmtech);
+            } else {
+                options.attribution = attributionAmtech;
+            }
+
+            var isOnControlSettings = [
+                [this.CONTROLS.LOCATEME, "withLocateMeControl"],
+                [this.CONTROLS.RESIZER, "withResizerControl"],
+                [this.CONTROLS.LAYER, "withLayerControl"],
+                [this.CONTROLS.COORDINATE, "withCoordinateControl"],
+                [this.CONTROLS.ZOOM, "withZoomControl"],
+                [this.CONTROLS.EDIT_STATE, "withEditStateControl"],
+                [this.CONTROLS.LINK_SEARCH, "withLinkSearchControl"]
+            ];
+            var self = this;
+            isOnControlSettings.forEach(function (keyValue) {
+                self[self._getControlId(keyValue[0]) + "_isShown"] = cfg[keyValue[1]];
+            });
+            return cfg;
+
+        },
         getIcon: function (data, defaultOptions) {
             var icon;
 
-            var iconClass = data.icon || '';
+            var iconClass = data.icon || "";
             var iconOptions = {
-                className: defaultOptions.className || '',
-                html: '<div class="map-icon ' + iconClass + '">&nbsp;</div>',
+                className: defaultOptions.className || "",
+                html: "<div class=\"map-icon " + iconClass + "\">&nbsp;</div>",
                 iconSize: null, // size of the icon
                 iconAnchor: null, // point of the icon which will
                 // correspond to marker's location
@@ -263,8 +272,8 @@
             this.registerViewChangeCallbacks();
         },
         registerLocationEventCallbacks: function () {
-            this.map.on('locationerror', this.onLocationError, this);
-            this.map.on('locationfound', this.onLocationFound, this);
+            this.map.on("locationerror", this.onLocationError, this);
+            this.map.on("locationfound", this.onLocationFound, this);
 
         },
         onLocationFound: function (eventData) {
@@ -284,7 +293,7 @@
         onLocationError: function (eventData) { // eventData of type
             // ErrorEvent
 
-            this.logger.warn('error locating user: ');
+            this.logger.warn("error locating user: ");
             this.logger.debug(eventData);
             if (this.__mustCenterAfterLocation) {
                 if (this.isShown()) {
@@ -363,12 +372,18 @@
         },
         hide: function () {
             this._mapHidden = true;
-            this._mapSize = [0, 0];
+            $(this.cfg.containerElement).hide();
         },
         show: function () {
             this._mapHidden = false;
             if (this.map) {
-                this.onresize().centerToLayers();
+                var container = $(this.cfg.containerElement);
+                container.show();
+                
+                if (this._mapSize[0] != container.width() ||
+                    this._mapSize[1] != container.height()) {
+                    this.onresize();
+                }
             }
         },
         isShown: function () {
@@ -393,14 +408,40 @@
         },
         centerToLayer: function (layer) {
             var bounds = this.getLayerBounds(layer);
-            this.map.fitBounds(bounds, {
-                padding: [10, 10],
-                maxZoom: this.cfg.maxZoomForCentering,
-                minZoom: 5
-            });
+            this.fitBounds(bounds, 5,
+                this.cfg.maxZoomForCentering);
+        },
+        fitBounds: function (bounds, minZoom, maxZoom) {
+            var centerToBounds;
+            if (arguments.length > 0) {
+                this.__centerToBounds = {
+                    bounds: bounds,
+                    zoom: [minZoom, maxZoom]
+                }
+            } else if (this.__centerToBounds && this.__centerToBounds.bounds) {
+                centerToBounds = this.__centerToBounds;
+                bounds = centerToBounds.bounds;
+
+                minZoom = (centerToBounds.zoom && centerToBounds.zoom[0]);
+                maxZoom = (centerToBounds.zoom && centerToBounds.zoom[1]);
+            } else {
+                return;
+            }
+            if (this.isShown()) {
+                var options = {
+                    padding: [10, 10],
+                    animate: false,
+                    noMoveStart: true,
+                    bounds: bounds,
+                    minZoom: minZoom || 1,
+                    maxZoom: maxZoom || this.cfg.maxZoomForCentering || 15
+                };
+
+                this.map.fitBounds(bounds, options);
+            }
         },
         centerToLayers: function () {
-            if (!this.verifyMap()) {
+            if (!this.map) {
                 return this;
             }
             var allLayers = [];
@@ -457,7 +498,7 @@
                             e = bounds.getEast();
                         }
                     }
-                })
+                });
                 if (s == n) {
                     s -= delta_lat;
                     n += delta_lat;
@@ -472,12 +513,10 @@
                 if (e > 180) {
                     e = 180;
                 }
+                var bounds = [[s, w], [n, e]];
 
-                this.map.fitBounds([[s, w], [n, e]], {
-                    padding: [10, 10],
-                    maxZoom: this.cfg.maxZoomForCentering,
-                    minZoom: 1
-                });
+                this.fitBounds(bounds, 1, this.cfg.maxZoomForCentering);
+
                 this.logger.info("MAP:  fitting the layers")
             } else {
                 try {
@@ -490,11 +529,11 @@
                     });// one minute
 
                 } catch (e) {
-                    this.logger.debug('Could not locate the user. Error message: ' + JSON.stringify(e));
+                    this.logger.debug("Could not locate the user. Error message: " + JSON.stringify(e));
                     this.__mustCenterAfterLocation = false;
                     this.map.setView([0, 0], this.map.getBoundsZoom([
                         [-90, -180], [90, 180]], true));
-                    this.logger.info("MAP: fitting world");
+                    this.logger.debug("MAP: fitting world");
                 }
             }
             return this;
@@ -502,23 +541,9 @@
         getDefaultZoom: function () {
             return this.cfg.zoom;
         },
-        sendMessageError: function (message) {
-            if (typeof message == "string") {
-                message = {
-                    message: message,
-                    details: '',
-                    severity: 'error'
-                }
-            } else if (typeof message != "object") {
-                this.logger.error("Invalid error message " + message);
-                return;
-            }
-            this.logger.debug("Error message received " + JSON.stringify(message));
-            this.fireEvent(this.EVENTS.ERROR, message);
-        },
         verifyMap: function () {
             if (this.map == null) {
-                this.sendMessageError(getMessage('MapNotReady'));
+                this.sendMessageError(getMessage("MapNotReady"));
                 return false;
             } else if (this._mapHidden) {
                 // console.log('the map is hidden');
@@ -645,7 +670,7 @@
                 markerZoomAnimation: this.cfg.markerZoomAnimation,
                 zoomAnimation: this.cfg.zoomAnimation
             });
-            this.map.on('load', this.updateImageOverlays.bind(this));
+            this.map.on("load", this.updateImageOverlays.bind(this));
             /*
              * this.map.setMaxBounds([ [-88, -180], [88, 180] ]);
              */
@@ -666,10 +691,10 @@
         initializeSpiderfier: function () {
             var self = this;
             this.oms = new OverlappingMarkerSpiderfier(this.map);
-            this.oms.addListener('click', function (marker) {
+            this.oms.addListener("click", function (marker) {
                 self.onClickEntityLayer(undefined, marker);
             });
-            this.oms.addListener('spiderfy', function (markers) {
+            this.oms.addListener("spiderfy", function (markers) {
                 self.map.closePopup();
             });
         },
@@ -682,52 +707,67 @@
             }
             this.fireEvent(this.EVENTS.LOAD);
         },
-        onresize: function () {
+        onresize: function (callback) {
+            if (!this._resizeCallbacks) {
+                this._resizeCallbacks = $.Callbacks();
+            }
             if (this.map && this.isShown()) {
                 this._checkingResize = this._checkingResize || false;
 
+                if (typeof callback == "function") {
+                    this._resizeCallbacks.add(callback);
+                }
                 if (!this._checkingResize) {
                     this._checkingResize = true;
-                    var widget = this;
+                    var self = this;
+                    var container = $(this.cfg.containerElement);
                     global
                         .setTimeout(
                             function () {
 
-                                var widgetMap = $(widget.cfg.containerElement);
-                                var mapContentDiv = widgetMap.parents('.'
-                                    + widget.STYLES.MAP_CONTAINER_PANEL);
+                                var mapContentDiv = container.parents("."
+                                    + self.STYLES.MAP_CONTAINER_PANEL);
                                 if (mapContentDiv.length == 0) {
-                                    mapContentDiv = widgetMap
+                                    mapContentDiv = container
                                         .parent();
                                 }
-                                widgetMap.height(mapContentDiv
+                                container.height(mapContentDiv
                                     .height());
-                                widgetMap.width(mapContentDiv
+                                container.width(mapContentDiv
                                     .width());
 
-                                widget._checkingResize = false;
-                                if (widget._mapSize[0] != mapContentDiv
+                                var newSize = [mapContentDiv.width(), mapContentDiv.height()];
+                                var oldSize = this._mapSize;
+                                self.fireEvent(self.EVENTS.MAP_RESIZE, newSize, oldSize);
+                                self._checkingResize = false;
+                                if (self._mapSize[0] != mapContentDiv
                                     .width()
-                                    || widget._mapSize[1] != mapContentDiv
+                                    || self._mapSize[1] != mapContentDiv
                                         .height()) {
                                     if (mapContentDiv.width() == 0
                                         || mapContentDiv
                                             .height() == 0) {
-                                        widget.hide();
+                                        self.hide();
                                     } else {
-                                        if (!widget.isShown()) {
-                                            this.logger.debug('the map was hidden');
-                                            widget.show();
+                                        if (!self.isShown()) {
+                                            self.logger.debug('the map was hidden');
+                                            self.show();
                                         }
-                                        widget._mapSize[0] = mapContentDiv
+                                        self._mapSize[0] = mapContentDiv
                                             .width();
-                                        widget._mapSize[1] = mapContentDiv
+                                        self._mapSize[1] = mapContentDiv
                                             .height();
 
-                                        widget.map.invalidateSize();
+                                        self.map.invalidateSize(false);
+                                        if (self.cfg.alwaysCenterToLayers) {
+                                            self.centerToLayers();
+                                        } else {
+                                            self.fitBounds();
+                                        }
                                     }
-                                }
-                            }, this.cfg.resizeDelay);
+                                self._resizeCallbacks.fire(newSize, oldSize).empty();
+                            }
+                        }, this.cfg.resizeDelay);
                 }
 
             }
@@ -781,7 +821,7 @@
                     url: url
                 };
             }
-            data.locationJson = this.fromOldLocation(location);
+            data.locationJson = this.fromOldLocation(area.location);
             data.location = data.locationJson && data.locationJson.wkt;
 
             if (("description" in area) && (area.description)) {
@@ -790,9 +830,9 @@
             if (("_name" in area) && (area._name)) {
                 data._name = area._name;
             }
-            var layer = null;
-            if (layer = this.createTheLayerWithoutEvents(data,
-                this.STYLES.PROXIMITY_AREA, true)) {
+            var layer = this.createTheLayerWithoutEvents(data,
+                this.STYLES.PROXIMITY_AREA, true);
+            if (layer && layer != null) {
                 this._proximityAreas[data.url] = data;
 
                 // fullLayer.on("click", this.onClickEntityLayer, this);
@@ -860,18 +900,19 @@
         },
         setImageOverlayUrl: function (layer, imageUrl, onload) {
             var resourceLoadedClbk = this.resourceLoadStart(imageUrl);
+            var onloadClbk = onload;
             if (resourceLoadedClbk) {
                 if (typeof onload == "function") {
-                    onload = function () { onload(); resourceLoadedClbk(); };
+                    onloadClbk = function () { onload(); resourceLoadedClbk(); };
                 } else {
-                    onload = resourceLoadedClbk;
+                    onloadClbk = resourceLoadedClbk;
                 }
             }
-            if (typeof onload == "function") {
-                layer.once("load", onload);
+            if (typeof onloadClbk == "function") {
+                layer.once("load", onloadClbk);
             }
 
-            if (imageUrl == layer._url) {
+            if (imageUrl == layer._url && !imageUrl.startsWith("blob://")) {
                 imageUrl = imageUrl + (imageUrl.indexOf("?" < 0) ? "?" : "&") + "nothing=true";
 
             }
@@ -882,7 +923,7 @@
             var self = this;
             var layer = this.findLayer(url, this.layerFloorplans);
             if (!this.isDefined(layer)) {
-                var layer = this.createImageOverlay(floorplan);
+                layer = this.createImageOverlay(floorplan);
                 if (this.isDefined(layer)) {
                     layer.url = url;
                     this.layerFloorplans.addLayer(layer);
@@ -919,7 +960,7 @@
                     return shape && coords && shape.length > 0 && coords.length > 0;
                 }
             }
-            return false
+            return false;
 
         },
         createImageOverlay: function (floorplan) {
@@ -929,13 +970,12 @@
             }
             var location = floorplan.wkt;
             var points = this.getCalibrationControlPoints(location);
-            var imageUrl = floorplan.imageurl;
             var clbk = this.resourceLoadStart(floorplan.imageurl);
             var overlay = L.imageOverlay.rotated(floorplan.imageurl, points[0], points[1], points[2], {
                 opacity: this.cfg.overlayOpacity || .4
             });
             var self = this;
-            overlay.on('load', function (e) {
+            overlay.on("load", function (e) {
                 self.logger.debug("overlay on load");
                 e.target._reset();
                 clbk();
@@ -946,14 +986,14 @@
         },
         createTheLayerWithoutEvents: function (data, layerClass, noMarker) {
             if (!data) {
-                this.logger.info("cannot create layer: argument is missing");
+                this.logger.debug("cannot create layer: argument is missing");
                 return this;
             }
 
             var url = data["@id"];
             if (!url || url.length < 1) {
                 this.logger.debug("no url given \n" + JSON.stringify(data, undefined, 2));
-                this.sendMessageError(getMessage('NoUrlGiven'));
+                this.sendMessageError(getMessage("NoUrlGiven"));
                 return this;
             }
             if (data.locationJson && ("wkt" in data.locationJson)
@@ -965,22 +1005,21 @@
             }
             if (!data.location || data.location.length < 1) {
                 this.logger.debug("Cannot create layer because location is missing: \n", JSON.stringify(data, undefined, 2));
-                this.sendMessageError(getMessage('NoLocationGiven'));
+                this.sendMessageError(getMessage("NoLocationGiven"));
                 return null;
             }
 
             var location = data.location;
             var name = data._name;
             if (!name || name.length < 1) {
-                var pos = url.lastIndexOf('/');
+                var pos = url.lastIndexOf("/");
                 name = url.substr(pos + 1);
             }
-            var description = data.description || '';
             var layer;
             try {
                 layer = wktParser.parse(location, this.getIsLatLng());
             } catch (e) {
-                this.sendMessageError(getMessage('InvalidGeometry', location));
+                this.sendMessageError(getMessage("InvalidGeometry", location));
                 return null;
             }
             var fullLayer = L.featureGroup().addLayer(layer);
@@ -1028,7 +1067,7 @@
             fullLayer.data = data;
             if (layer instanceof L.Marker || !noMarker) {
                 var iconOptions = {
-                    className: layerClass + ' ' + this.STYLES.MARKER_ICON,
+                    className: layerClass + " " + this.STYLES.MARKER_ICON,
                     popupAnchor: [-3, -27]
                 };
                 var theIcon = this.getIcon(data, iconOptions);
@@ -1054,29 +1093,29 @@
                     var tooltip = marker.getTooltip();
                     marker.unbindTooltip().bindTooltip(tooltip, {
                         permanent: permanent
-                    })
-                };
+                    });
+                }
 
-            }
+            };
             this.layerAllItems.eachLayer(forEach);
             this.layerActiveItems.eachLayer(forEach);
         },
         toggleLabels(visible) {
-            if (typeof visible=="undefined"){
+            if (typeof visible == "undefined") {
                 visible = !this.__showLabels;
             }
             if (visible != this.__showLabels) {
-                this.__showLabels=visible;
+                this.__showLabels = visible;
                 if (!visible) {
                     this.makeTooltipsPermanent(false);
-                }else{
+                } else {
                     this.makeTooltipsPermanent(this.isPermanentLabels());
                 }
             }
             return this;
         },
         __isInsideZoomRange(zoom, range) {
-            return !(zoom > this.cfg.permanentLabels[1]) && !(zoom < this.cfg.permanentLabels[0]);
+            return !(zoom > range[1]) && !(zoom < range[0]);
         },
         isPermanentLabels() {
             if (!this.cfg.permanentLabels || !this.__showLabels) {
@@ -1090,31 +1129,39 @@
             }
         },
         bindPopupAndLabel: function (fullLayer, data) {
-            var label = data.shortName;
-            var labelDefinition = this.cfg.labelDefinition;
-            if (typeof labelDefinition == "function") {
-                label = labelDefinition(data);
-            }
             var layer;
             if (fullLayer.theMarker) {
                 layer = fullLayer.theMarker;
             } else {
                 layer = fullLayer.theLayer;
             }
-            var permanent = this.isPermanentLabels();
-            layer.bindTooltip(label, {
-                className: this.STYLES.LABEL,
-                permanent: permanent
-            }).openTooltip();
-            /*
-                        fullLayer
-                            .bindPopup("<h3>" + data._name + "</h3>"
-                                + ((data.description && data.description.length > 0) ? ("<span class='"
-                                    + this.STYLES.POPUP_TEXT + "'>"
-                                    + data.description + "</span>") : ''), {
-                                    className: this.STYLES.POPUP
-                                });
-            */
+
+            var label = data.shortName;
+            var labelDefinition = this.cfg.labelDefinition;
+            if (typeof labelDefinition == "function") {
+                label = labelDefinition(data);
+            } else if (data.label) {
+                label = data.label;
+            }
+            if (label && label.length>0){
+                var permanent = this.isPermanentLabels();
+                layer.bindTooltip(label, {
+                    className: this.STYLES.LABEL,
+                    permanent: permanent
+                }).openTooltip();
+            }
+            var popup="";
+            var popupDefinition = this.cfg.popupDefinition;
+            if (typeof popupDefinition == "function") {
+                popup = popupDefinition(data);
+            } else if (data.popup) {
+                popup = data.popup;
+            }
+            if (popup && popup.length>0){
+                 fullLayer.bindPopup(popup, {
+                                className: this.STYLES.POPUP
+                            });
+            }
         },
         clearMap: function () {
             if (this.map) {
@@ -1182,7 +1229,7 @@
         deleteLayer: function (layer) {
             if (layer != null) {
                 layer.getLayers().forEach(function (item) {
-                    item.clearAllEventListeners()
+                    item.clearAllEventListeners();
                 });
                 layer.clearLayers();
                 delete layer.theLayer;
@@ -1199,7 +1246,7 @@
         onClickEntityLayer: function (event, layer) {
             if (this.isShown() && this.canSelect()) {
                 // console.log("event caught: "+event.type);
-                var layer = (layer || (event && event.layer));
+                layer = (layer || (event && event.layer));
                 var fullLayer;
                 if (layer && layer.fullLayer) {
                     fullLayer = layer.fullLayer;
@@ -1317,10 +1364,11 @@
         fireViewChangeEvent: function (eventData) {
             if (this.isShown()) {
                 var event = {
-                    type: eventData.type || 'moveend',
+                    type: eventData.type || "moveend",
                     src: this,
                     wkt: this.getCurrentBoundsWkt(),
-                    view: this.map.getBounds()
+                    view: this.map.getBounds(),
+                    zoom: this.map.getZoom()
                 };
                 this.fireEvent(this.EVENTS.VIEW_CHANGE, event);
             }
@@ -1341,6 +1389,9 @@
                 }
                 this.map.on("zoomend", onZoomend);
             }
+            this.map.on("movestart", ()=>{
+                this.__centerToBounds=undefined;
+            }, this);
 
             this.map.on("moveend", this.fireViewChangeEvent, this);
             this.map.on("zoomend", this.fireViewChangeEvent, this);
@@ -1500,7 +1551,6 @@
             return this;
         },
         removeElement: function (url) {
-            var data;
             if (!url) {
                 this.logger.info("missing argument 'url' when removing element");
 
@@ -1555,6 +1605,14 @@
             this._shownLayerOverlays = false;
 
         },
+        getCalibrationLocation: function (leftTop, rightTop, leftBottom) {
+
+            return GEOMETRY.POLYGON + "((" +
+                wktParser.stringifyCoords(leftTop, this.getIsLatLng()) + "," +
+                wktParser.stringifyCoords(rightTop, this.getIsLatLng()) + "," +
+                wktParser.stringifyCoords(leftBottom, this.getIsLatLng()) + "," +
+                wktParser.stringifyCoords(leftTop, this.getIsLatLng()) + "))";
+        },
         getCalibrationControlPoints: function (wkt) {
             var leftTop, rightTop, leftBottom;
             var bounds = this.map.getBounds();
@@ -1594,13 +1652,13 @@
                         leftTop = [newNorth, newWest];
                         rightTop = [newNorth, newEast];
                         leftBottom = [newSouth, newWest];
-                        break
+                        break;
                     case GEOMETRY.RECTANGLE:
 
                         leftTop = [coords[1][0], coords[0][1]];
                         rightTop = [coords[1][0], coords[1][1]];
                         leftBottom = [coords[0][0], coords[0][1]];
-                        break
+                        break;
                     case GEOMETRY.POLYGON:
                     case GEOMETRY.POLYLINE:
                         leftTop = coords[0][0];
@@ -1609,7 +1667,7 @@
                         break;
                     default:
                         this.logger.error("unhandled geometry");
-                        return undefined
+                        return undefined;
                 }
             }
             return [L.latLng(leftTop), L.latLng(rightTop), L.latLng(leftBottom)];
@@ -1620,19 +1678,19 @@
         fromOldLocation: function (locationField) {
             if (!locationField) {
                 locationField = {
-                    wkt: ''
+                    wkt: ""
                 };
 
             } else if (typeof locationField == "string") {
-                if (!locationField.trim().startsWith('{')) {
+                if (!locationField.trim().startsWith("{")) {
                     var pos = locationField.lastIndexOf(";");
                     locationField = "{"
                         + (locationField.substr(0, pos + 1)
-                            + '"wkt":"'
-                            + locationField.substr(pos + 1) + '"')
+                            + "\"wkt\":\""
+                            + locationField.substr(pos + 1) + "\"")
                             .replace(
                                 /\b([a-zA-Z][a-zA-Z0-9_]*)\b=([^;]*);/g,
-                                '"$1":"$2",') + '}';
+                                "\"$1\":\"$2\",") + "}";
                 }
                 locationField = JSON.parse(locationField);
             }
@@ -1783,7 +1841,6 @@
                     if (url != currentElement) {
 
                         var selectedLayer = this.findLayer(url);
-                        var data;
                         if (this.isDefined(selectedLayer)) {
                             this.unselectLayer(event, doNotSendEvent);
 
@@ -1793,7 +1850,7 @@
                                 this.STYLES.ALL, this.STYLES.SELECTED);
 
                         } else {
-                            if ((data = this.findUnlocatedData(url)) != null) {
+                            if (this.findUnlocatedData(url) != null) {
                                 selectedLayer = undefined;
                             }
                         }
@@ -1837,13 +1894,18 @@
          */
         createControl: function (id, options) {
             switch (id) {
-                case this.CONTROLS.AMTECH: return this.createAmtechImageControl(options);
-                case this.CONTROLS.LOCATEME: return this.createLocateMySelfControl(options);
-                case this.CONTROLS.ZOOM: return this.createLocalizedZoomControl(options);
-                case this.CONTROLS.RESIZER: return this.createResizeControl(options);
-                case this.CONTROLS.LAYER: return this.createLocalizedLayerControl(options);
-                case this.CONTROLS.COORDINATE: return this.createCoordinateControl(options);
-                case this.CONTROLS.LINK_SEARCH: return this.createLinkSearchControl(options);
+                case this.CONTROLS.AMTECH:
+                    return this.createAmtechImageControl(options);
+                case this.CONTROLS.LOCATEME:
+                    return this.createLocateMySelfControl(options);
+                case this.CONTROLS.ZOOM:
+                    return this.createLocalizedZoomControl(options);
+                case this.CONTROLS.LAYER:
+                    return this.createLocalizedLayerControl(options);
+                case this.CONTROLS.COORDINATE:
+                    return this.createCoordinateControl(options);
+                case this.CONTROLS.LINK_SEARCH:
+                    return this.createLinkSearchControl(options);
             }
             return null;
         },
@@ -1891,12 +1953,12 @@
             };
 
             var baseLayers = {};// put here the tile layers or background
+            // overlays
             var keyValues = [
                 [getMessage("Things"), this.layerAllItems],
                 [getMessage("Timeline"), this.layerTimeline],
                 [getMessage("ProximityAreas"), this.layerProximityAreas],
                 [getMessage("Floorplans"), this.layerFloorplans]];
-            // overlays
             var overlays = {};
             keyValues.forEach(function (keyValue) {
                 overlays[keyValue[0]] = keyValue[1];
@@ -1909,8 +1971,8 @@
             }
             var zoomOptions = {};
             var options = {
-                zoomInTitle: getMessage('ZoomIn'),
-                zoomOutTitle: getMessage('ZoomOut')
+                zoomInTitle: getMessage("ZoomIn"),
+                zoomOutTitle: getMessage("ZoomOut")
             };
             for (var key in options) {
                 if (options.hasOwnProperty(key) && options[key]) {
@@ -1919,6 +1981,22 @@
             }
             return new L.Control.Zoom(zoomOptions);
         },
+        createLinkSearchControl: function () {
+            if (!L.Control.LinkSearch) {
+                if (amtech.console.defineLinkSearchControl) {
+                    amtech.console.defineLinkSearchControl(L);
+                } else {
+                    return null;
+                }
+            }
+            var self = this;
+            return new L.Control.LinkSearch({
+                onclick: function (activated) {
+                    self.toggleChangeNotificationsActivated(activated);
+                }
+            });
+        },
+
         createCoordinateControl: function () {
             if (!L.Control.Coordinates) {
                 return null;
@@ -1950,7 +2028,7 @@
                 this.addEventListener(this.EVENTS.CHANGE, this._onLocationEditListener);
             }
         },
-        clearLocationEditListener: function (onchange) {
+        clearLocationEditListener: function () {
             if (typeof this._onLocationEditListener == "function") {
                 this.removeEventListener(this.EVENTS.CHANGE, this._onLocationEditListener);
             }
@@ -1970,6 +2048,9 @@
                 if (!cfg.map
                     || !(cfg.map instanceof amtech.console.widget.LeafletMap)) {
                     this.sendMessageError(getMessage("MapMissing"));
+                }
+                if (!cfg.logger) {
+                    cfg.logger = cfg.map.logger;
                 }
                 return cfg;
             },
@@ -1994,7 +2075,7 @@
             },
             clearHistory: function (url) {
                 if (!url) {
-
+                    //erase all history
                     for (var key in this._timeline) {
                         if (this._timeline.hasOwnProperty(key)) {
                             this.removeLayerFromHistory(this
@@ -2020,7 +2101,7 @@
                 }
             },
             getIsLatLng: function () {
-                return this.cfg.map.isLatLng();
+                return this.cfg.map.getIsLatLng();
             },
             getHistoryElement: function (group) {
                 return this._timeline[group];
@@ -2066,24 +2147,23 @@
                 });
                 return this._timeline[url];
             },
+
             addHistoryElementEntry: function (entry) {
                 var timeStamp = entry.time,
                     wkt = entry.wkt,
                     url = entry.url;
 
                 entry.layer = wktParser.parse(wkt, this.getIsLatLng());
-                entry.layer.bindPopup((!url ? '' : 'url=' + url + '<br/>')
+                entry.layer.bindPopup((!url ? "" : "url=" + url + "<br/>")
                     + "timestamp=" + timeStamp);
                 var styleClass = this.cfg.map.STYLES.TIMELINE;
                 if (entry.layer instanceof L.Marker) {
                     // we need to set the icon
 
                     var icon = this.cfg.map.getIcon({}, {
-                        className: styleClass + ' '
+                        className: styleClass + " "
                             + this.cfg.map.STYLES.MARKER_ICON,
                         popupAnchor: [-3, -27]
-                        // point from which the popup should open relative to the
-                        // iconAnchor
                     });
                     entry.layer.setIcon(icon);
                 } else {
@@ -2108,7 +2188,7 @@
                 }
                 var pos = this.insertEntryToList(element.entryList, entry);
                 var point = (entry.layer instanceof L.Marker) ? entry.layer
-                    .getLatLng() : getLayerBounds(entry.layer).getCenter();
+                    .getLatLng() : this.getLayerBounds(entry.layer).getCenter();
                 var latlngs = element.path.getLatLngs();
                 latlngs.splice(pos, 0, point);
                 element.path.setLatLngs(latlngs);
@@ -2120,7 +2200,7 @@
                     VALUE = "location",
                     value, timestamp;
 
-                var elementId, obj, entry;
+                var obj, entry;
                 for (var i = 0; i < snapshots.length; i++) {
                     obj = snapshots[i];
                     if (!obj.hasOwnProperty(TIMESTAMP)) {
@@ -2130,7 +2210,7 @@
                     timestamp = obj[TIMESTAMP];
 
                     if (!obj.hasOwnProperty(VALUE)) {
-                        this.logger.info("there is a snapshot without value");
+                        this.logger.debug("there is a snapshot without value");
                         continue;
                     }
                     var valueJson = this.cfg.map.fromOldLocation(obj[VALUE]);
@@ -2156,16 +2236,16 @@
         L.Control.HyperlinkImage = L.Control
             .extend({
                 options: {
-                    position: 'topright',
+                    position: "topright",
                     title: "AMTech solutions",
                     src: "http://wiki.amtech.mx/mediawiki/resources/assets/amtech-mini.png",
                     href: "http://www.amtech.solutions"
                 },
                 onAdd: function (map) {
-                    var controlDiv = L.DomUtil.create('div', 'leaflet-bar');
-                    L.DomEvent.addListener(controlDiv, 'click', L.DomEvent.stopPropagation);
+                    var controlDiv = L.DomUtil.create("div", "leaflet-bar");
+                    L.DomEvent.addListener(controlDiv, "click", L.DomEvent.stopPropagation);
 
-                    var controlUI = L.DomUtil.create('a', 'map-amtech', controlDiv);
+                    var controlUI = L.DomUtil.create("a", "map-amtech", controlDiv);
                     controlUI.title = this.options.title;
                     controlUI.href = this.options.href;
                     controlUI.target = "_blank";
@@ -2174,5 +2254,5 @@
                     return controlDiv;
                 }
             });
-    }
-})(window)
+    };
+})(window);

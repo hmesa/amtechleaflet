@@ -1,4 +1,4 @@
-(function (window) {
+(function (global) {
     "use strict";
 
     var KNOWN_LOG_LEVELS = ['debug', 'info', 'warn', 'error'];
@@ -87,8 +87,9 @@
                 constructor(logLevel) {
                     super(sourceLogger.logLevel);
                 }
-                _log(level, msg) {
-                    sourceLogger.log(level, param1, param2, msg);
+                _log() {
+                    Array.prototype.splice.call(arguments, 1, 0, param1, param2);
+                    sourceLogger.log.apply(sourceLogger, arguments);
                 }
             }
 
@@ -130,6 +131,6 @@
     if (typeof module !== "undefined") {
         module.exports = logger
     } else {
-        window.Loggers = logger;
+        global.Loggers = logger;
     }
-})(this);
+})(window);

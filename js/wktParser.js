@@ -130,7 +130,8 @@
                         page = getPagesToCenter(latlng.lng);
                     } else {
                         bounds = undefined;
-                        if (layer instanceof L.LatLngBounds) {
+                        if (layer instanceof L.LatLngBounds ||
+                            (typeof layer.getEast == "function" && typeof layer.getEast == "function")) {
                             bounds = layer;
                         } else if (typeof layer.getBounds == "function") {
                             bounds = layer.getBounds();
