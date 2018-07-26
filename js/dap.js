@@ -1,6 +1,6 @@
-(function (window) {
+(function (global) {
     "use strict";
-    var dap = window.dap;
+    var dap = global.dap;
     if (!dap) {
         if (typeof require == "function") {
             dap = require("./baseDap.js");
@@ -9,10 +9,10 @@
     if (!dap || !dap.DapBaseController) {
         throw new Error("Missing import: unknown class DapBaseController");
     }
-    var RestCallError = window.dap.RestCallError;
-    var DapController = window.dap.DapBaseController;
+    var RestCallError = global.dap.RestCallError;
+    var DapController = global.dap.DapBaseController;
 
-    var HttpRequestRestCaller = window.dap.RestCaller.extend({
+    var HttpRequestRestCaller = global.dap.RestCaller.extend({
         init: function (cfg) {
             this._super(cfg);
             this.dapUrl = cfg.dapUrl;
@@ -206,6 +206,6 @@
     if (typeof module !== "undefined") {
         module.exports = dap.createDapClient;
     } else {
-        window.dap = dap;
+        global.dap = dap;
     }
 })(this);

@@ -57,7 +57,7 @@
             this.logger = logger || window.console;
         },
         setCredentials: function (user, password) {
-            if (!user || !password) {
+            if (!user ) {
                 this.loginCredentials = undefined;
                 return;
             } else if (this.loginCredentials != undefined) {
@@ -104,8 +104,10 @@
                 data['success'] == false) {
                 if ("message" in data && data.message.length > 0) {
                     errorMsg = data.message;
-                    if ("messagedetail" in data && !data.messagedetail.length > 0) {
-                        errorMsg += (": " + data.messagedetail);
+                    if (errorMsg != "Resource not found") {
+                        if ("messagedetail" in data && !data.messagedetail.length > 0) {
+                            errorMsg += (": " + data.messagedetail);
+                        }
                     }
                 } else {
                     errorMsg = "unknown error: " + JSON.stringify(data, null, 10);
@@ -238,12 +240,22 @@
 
             });
         },
-        getResource: function (resourceUri) {
-            return this.get(resourceUri)
+        getResource: function (resourceUri,paramsObj) {
+            return this.get(resourceUri,paramsObj)
                 .then((response) => {
                     this.logger.debug("loaded resource " + resourceUri);
-                    return response
-                });
+                let content;
+                if (!response.contentType) {
+                    content = response;
+                } else if (response.contentType == "application/json") {
+                    content = response.content;
+                }
+                if (content && !Array.isArray(content)) {
+                    content = [content];
+                }
+
+                return content;
+            })
         },
         getBinaryResource: function (resourceUri, paramsObj) {
             return this.getBinary(resourceUri, paramsObj)
