@@ -62,7 +62,6 @@
                 this.__imageContentGatheringFcn = undefined;
             }
         }
-
         //#endregion
         /**/
 
@@ -99,7 +98,7 @@
         }
         setClassForUrl(url, className, useImageInsteadOfUrls) {
             if (!url || url.length == 0) {
-                this.logger.error("missing url ");
+                this.__log("error","missing url ");
                 return Promise.reject();
             }
             if (className == undefined) {
@@ -136,12 +135,12 @@
                             style.html(string);
                         }
                     }else{
-                        this.logger.log("Css container div has not been set");
+                        this.__log("debug","Css container div has not been set");
                     }
                     return classData;
                 });
             } else {
-                return Promise.resolve(undefined);
+                return Promise.resolve();
             }
         }
        
@@ -264,7 +263,6 @@
             } else {
                 promise = Promise.resolve(result);
             }
-
             return promise;
         }
         //#endregion

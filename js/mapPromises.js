@@ -130,10 +130,10 @@
         /**/
 
         //#region dapClient related
+        isDapClientSet() {
+            return typeof this.dapClient != "undefined";
+        }
         getDapClient() {
-            if (!this.dapClient) {
-                this.createDapClient();
-            }
             return this.dapClient;
         }
         setDapClient(dapClient) {
@@ -409,7 +409,7 @@
                                     error.message || error || "", "debug");
                                 return undefined;
                             }
-                        )
+                        );
                 }
                 iconData = this.imageCache[itemType];
                 var locationData = json['location'];
@@ -526,8 +526,9 @@
                 return dapClient.getQueryResults(queryUrl, params)
                     .then((response) => {
                         this.setStatus(queryUrl, "processing elements");
-                        this.__log("debug", JSON.stringify(response, [], 2));
-
+                        if (self.logger.isDebugEnabled()) {
+                            this.__log("debug", JSON.stringify(response, [], 2));
+                        }
                         return response;
                     })
                     .then(this.addElements.bind(this))
@@ -612,10 +613,10 @@
                         }
                     }, timeout);
 
-                })
+                });
             }).finally(
                 () => { this.setStatus("__map", undefined); }
-            )
+            );
         }
         //#endregion
         /**/

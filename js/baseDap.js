@@ -57,7 +57,7 @@
             this.logger = logger || window.console;
         },
         setCredentials: function (user, password) {
-            if (!user ) {
+            if (!user) {
                 this.loginCredentials = undefined;
                 return;
             } else if (this.loginCredentials != undefined) {
@@ -66,7 +66,7 @@
                     return;
                 }
             }
-            this.loginCredentials = function() {
+            this.loginCredentials = function () {
                 return {
                     username: user,
                     password: password,
@@ -240,22 +240,22 @@
 
             });
         },
-        getResource: function (resourceUri,paramsObj) {
-            return this.get(resourceUri,paramsObj)
+        getResource: function (resourceUri, paramsObj) {
+            return this.get(resourceUri, paramsObj)
                 .then((response) => {
                     this.logger.debug("loaded resource " + resourceUri);
-                let content;
-                if (!response.contentType) {
-                    content = response;
-                } else if (response.contentType == "application/json") {
-                    content = response.content;
-                }
-                if (content && !Array.isArray(content)) {
-                    content = [content];
-                }
+                    let content;
+                    if (!response.contentType) {
+                        content = response;
+                    } else if (response.contentType == "application/json") {
+                        content = response.content;
+                    }
+                    if (content && !Array.isArray(content)) {
+                        content = [content];
+                    }
 
-                return content;
-            })
+                    return content;
+                });
         },
         getBinaryResource: function (resourceUri, paramsObj) {
             return this.getBinary(resourceUri, paramsObj)
@@ -267,28 +267,28 @@
         },
         postResource(resource) {
             var resourceUri = resource["@id"];
-            var resourceType= resource["@type"];
-            if (!resourceUri ||!resourceType){
-                return Promise.reject("Missing id or type in resource "+JSON.stringify(resource));
+            var resourceType = resource["@type"];
+            if (!resourceUri || !resourceType) {
+                return Promise.reject("Missing id or type in resource " + JSON.stringify(resource));
             }
-            var url=window.CONSTANTS.PATHS.ROOT;
-            if (resourceUri.startsWith(window.CONSTANTS.PATHS.TYPES+"/")){
+            var url = window.CONSTANTS.PATHS.ROOT;
+            if (resourceUri.startsWith(window.CONSTANTS.PATHS.TYPES + "/")) {
                 url = window.CONSTANTS.PATHS.TYPES;
             }
-            return this.post( url, resource).then((response) => {
-                    this.logger.debug("Send \"new\" request for resource " + resourceUri);
-                    return response;
-                });
+            return this.post(url, resource).then((response) => {
+                this.logger.debug("Sent \"new\" request for resource " + resourceUri);
+                return response;
+            });
         },
         putResource: function (resource) {
             var resourceUri = resource["@id"];
-            var resourceType= resource["@type"];
-            if (!resourceUri ||!resourceType){
-                return Promise.reject("Missing id or type in resource "+JSON.stringify(resource));
+            var resourceType = resource["@type"];
+            if (!resourceUri || !resourceType) {
+                return Promise.reject("Missing id or type in resource " + JSON.stringify(resource));
             }
-            var url=window.CONSTANTS.PATHS.ROOT;
-            if (resourceUri.startsWith(window.CONSTANTS.PATHS.TYPES+"/")){
-                url=window.CONSTANTS.PATHS.TYPES;
+            var url = window.CONSTANTS.PATHS.ROOT;
+            if (resourceUri.startsWith(window.CONSTANTS.PATHS.TYPES + "/")) {
+                url = window.CONSTANTS.PATHS.TYPES;
             }
             return this.put(url, resource)
                 .then((response) => {
@@ -382,8 +382,8 @@
                 // return undefined;
             })
         },
-        setCredentials(user,password){
-            this.restCaller.setCredentials(user,password);
+        setCredentials(user, password) {
+            this.restCaller.setCredentials(user, password);
         },
         getBridgeInstancesByMacAddress(macAddress) {
             if (!macAddress || macAddress.length == 0) {
