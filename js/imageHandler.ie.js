@@ -9,30 +9,80 @@
     "use strict";
     var cssSafeCodec = window.cssSafeCodec;
     if (typeof cssSafeCodec == "undefined" && typeof require == "function") {
-        cssSafeCodec = window.cssSafeCodec = require('./cssSafeCodec.js');
+        cssSafeCodec = window.cssSafeCodec = require("./cssSafeCodec.js");
     }
-    var DOMURL = (typeof window != 'undefined') ? (window.URL || window.webkitURL || window) : undefined;
+    var DOMURL = (typeof window != "undefined") ? (window.URL || window.webkitURL || window) : undefined;
     var ImageHandler = window.Class.extend({
-        init: function (dapClient, logger) {
+        init: function (imageContentGatheringFcn, logger) {
             var baseUrl = "/amtech/linkeddata/types/composite/entity";
-            var escapedUrl = '^' + baseUrl.replace('/', '\/');
-            var nameRegexp = '[^\/]+';
-            var fieldRegexp = '^typesvgicon$';
+            var escapedUrl = "^" + baseUrl.replace("/", "\\/");
+            var nameRegexp = "[^\\/]+";
+            var fieldRegexp = "^typesvgicon$";
 
             this.PATTERN_BASE_URL = new RegExp(escapedUrl); // base url
-            this.PATTERN_INSTANCE_URL = new RegExp(escapedUrl + '\/' + nameRegexp
-                + '$'); // instance url pattern
-            this.PATTERN_BASE_FIELD_URL = new RegExp(escapedUrl + '\/' + nameRegexp
-                + '\/' + fieldRegexp + '$'); // instance field url pattern
-            this.CLASS_PREFIX = 'typesvgicon';
+            this.PATTERN_INSTANCE_URL = new RegExp(escapedUrl + "\\/" + nameRegexp
+                + "$"); // instance url pattern
+            this.PATTERN_BASE_FIELD_URL = new RegExp(escapedUrl + "\\/" + nameRegexp
+                + "\\/" + fieldRegexp + "$"); // instance field url pattern
+            this.CLASS_PREFIX = "typesvgicon";
 
-            this.imageFieldForClass = 'typesvgicon';
-            this.dapClient = dapClient;
+            this.imageFieldForClass = "typesvgicon";
+            if (typeof imageContentGatheringFcn == "function") {
+                this.__setImageContentGatheringFcn(imageContentGatheringFcn);
+            } else if (Object.prototype.isPrototypeOf(imageContentGatheringFcn)) {
+                this.setDapClient(imageContentGatheringFcn);
+            }
             this.setLogger(logger);
         },
+        setDapClient: function (dapClient) {
+            var imageContentGatheringFcn = undefined;
+            if (typeof dapClient != "undefined") {
+                imageContentGatheringFcn = function (url, binary) {
+                    return (binary ? dapClient.getBinaryResource(url) : dapClient.get(url));
+                }
+            }
+            this.__setImageContentGatheringFcn(imageContentGatheringFcn);
+        },
+        releaseImage: function (imageObjectUrl) {
+            DOMURL.revokeObjectURL(imageObjectUrl);
+        },
+        setCssStyleContainerDiv: function ($div) {
+            this.stylesContainerDiv = $div;
+        },
+        //#region Gathering function
+        __getImageContentGatheringFcn: function () {
+            return this.__imageContentGatheringFcn;
+        },
+        __setImageContentGatheringFcn: function (imageContentGatheringFcn) {
+            if (typeof imageContentGatheringFcn == "function") {
+                this.__imageContentGatheringFcn = imageContentGatheringFcn;
+            } else {
+                this.__imageContentGatheringFcn = undefined;
+            }
+        },
+        //#endregion
+        /**/
+
+        //#region Logger
         setLogger: function (logger) {
             this.logger = logger || console;
         },
+        __log() {
+            if (this.logger) {
+                var level = Array.prototype.shift.call(arguments);
+                if (typeof this.logger[level] == "function") {
+                    if (level != "debug" || (typeof this.logger.isDebugEnabled == "undefined") || this.logger.isDebugEnabled()) {
+                        this.logger[level].apply(this.logger, arguments);
+                    }
+                } else {
+                    console.log("The logger does not handle the given level " + level);
+                }
+            }
+        },
+        //#endregion
+        /**/
+
+        //#region Class names
         getImageCssClassName: function (url) {
             if (this.PATTERN_INSTANCE_URL.test(url)) {
                 var fieldName = this.imageFieldForClass;
@@ -40,20 +90,88 @@
                 return this.CLASS_PREFIX
                     + "-"
                     + cssSafeCodec.encode(url.replace(
-                        this.PATTERN_BASE_URL, '')) + suffix;
+                        this.PATTERN_BASE_URL, "")) + suffix;
             }
-            return '';
+            return "";
         },
+        setClassForUrl: function (url, className, useImageInsteadOfUrls) {
+            var self = this;
+            if (!url || url.length == 0) {
+                this.__log("error", "missing url ");
+                return Promise.reject();
+            }
+            if (className == undefined) {
+                className = this.getImageCssClassName(url);
+            }
+            if (className.length > 0) {
+                var promise = ((!useImageInsteadOfUrls) ? Promise.resolve(url) : this.getEntityImageFromUrl(url))
+                    .then(function (response) {
+                        if (response && response.length > 0) {
+                            return {
+                                className: className,
+                                id: response,
+                                content: self.getCssContentForUrl(response)
+                            };
+                        } else {
+                            return undefined;
+                        }
+                    });
+
+                return promise.then(function (classData) {
+                    if (!classData) {
+                        return undefined;
+                    }
+
+                    if (self.stylesContainerDiv) {
+                        var containerDiv = this.stylesContainerDiv;
+                        var string = "." + classData.className + "{ content:" + classData.content + ";}";
+                        var styleId = "entityClass_" + className;
+                        var style = containerDiv.find("#" + styleId);
+                        if (style.length == 0) {
+                            containerDiv.append("<style id=\"" + styleId + "\">" + string
+                                + ";</style>");
+                        } else {
+                            style.html(string);
+                        }
+                    } else {
+                        self.__log("debug", "Css container div has not been set");
+                    }
+                    return classData;
+                });
+            } else {
+                return Promise.resolve();
+            }
+        },
+
+
+        //#endregion
+        /**/
+
+        //#region content
         getCssContentForSVG: function (svg, charset) {
-            charset = (charset || 'utf8');
-            return 'url(\'data:image/svg+xml;' + charset + ',' + svg.content + '\')';
+            charset = (charset || "utf8");
+            return "url('data:image/svg+xml;" + charset + "," + svg.content + "')";
         },
         getCssContentForUrl: function (url) {
-            return 'url(\'' + url.replace(/([^\\])'/g, "$1\\'") + '\')';
+            return "url('" + url.replace(/([^\\])'/g, "$1\\'") + "')";
         },
+        getImageUrlFromResourceUri: function (url) {
+            if (!url || url.length == 0) {
+                return undefined;
+            } else {
+                var imageUrl = url;
+                if (url.startsWith(window.CONSTANTS.PATHS.TYPE_ENTITY)) {
+                    imageUrl += (url.indexOf("?") > 0 ? "&" : "?") + "property=" + this.imageFieldForClass + "&mtype=image%2Fsvg%2Bxml";
+                }
+                return imageUrl;
+            }
+
+        },
+
         getImageCssContentFromUrl: function (typeUrl) {
+            var self = this;
             var imageUrl = typeUrl + (typeUrl.indexOf("?") > 0 ? "&" : "?") + "property=" + this.imageFieldForClass;
-            return this.getExternalResource(imageUrl).then(function(response) {
+            return this.getExternalResource(imageUrl).then(function (response) {
                 var data = response.data;
                 var contentType, charset, content = data;
                 if (data) {
@@ -67,50 +185,22 @@
                     }
                 }
                 if (response.type == "data") {
-                    return this.getCssContentForSVG(content, charset);
+                    return self.getCssContentForSVG(content, charset);
                 } else if (response.type == "url") {
-                    return this.getCssContentForUrl(content);
+                    return self.getCssContentForUrl(content);
                 } else {
                     return Promise.reject(new Error("Unexpected response data type " + response.type + " for data " + response.data));
                 }
             })
-        },
-        getExternalResource: function (url, binary) {
-            var result = { type: "url", data: url };
-            if (!this.dapClient) {
-                return Promise.resolve(result);
-            } else {
-                var logger = this.logger;
-                return (binary ? this.dapClient.getBinaryResource(url) : this.dapClient.get(url)).then(function(response) {
-                    logger.debug("================> read successful")
-                    if (!response) {
-                        throw new Error("Unexpected empty response for image");
-                    } else {
-                        var data = response.content;
-                        var content = data;
-                        var contentType, charset;
-                        if (data && response.contentType) {
-                            contentType = response.contentType;
-                            content = response.content;
-                            charset = response.charset;
-                        }
-                        return { type: "data", data: content, contentType: contentType, charset: charset };
-                    }
-                }).catch(function(response) {
-                    logger.info("image read unsuccessful.", response.message || response, (response.statusCode) ? "(Code " + response.statusCode + ")" : "");
-
-                    return result;
-                });
-            }
         },
         releaseImage: function (imageObjectUrl) {
             DOMURL.revokeObjectURL(imageObjectUrl);
         },
         getImageFromUrl: function (imageUrl) {
             var imageUrl = imageUrl;
-            return this.getExternalResource(imageUrl, true).then(function(response) {
+            return this.getExternalResource(imageUrl, true).then(function (response) {
 
-                if (response.type == 'data') {
+                if (response.type == "data") {
                     //we need to set the content type and the data
                     var data = response.data;
                     var image = data;
@@ -126,62 +216,61 @@
                     return DOMURL.createObjectURL(image);
 
                 } else {
-                    return response.data
+                    return response.data;
                 }
             });
         },
         getEntityImageFromUrl: function (typeUrl) {
             var imageUrl = typeUrl + (typeUrl.indexOf("?") > 0 ? "&" : "?") + "property=" + this.imageFieldForClass;
-            return this.getExternalResource(imageUrl).then(function(response) {
+            return this.getExternalResource(imageUrl).then(function (response) {
                 var data = response.data;
-                if (response.type == 'data') {
+                if (response.type == "data") {
                     var contentType = response.contentType;
-                    var svg = new Blob([data], { type: 'image/svg+xml' });
+                    var svg = new Blob([data], { type: "image/svg+xml" });
                     return DOMURL.createObjectURL(svg);
 
                 } else {
-                    return response.data
+                    return response.data;
                 }
             });
         },
-        setClassForUrl: function (url, className, useImageInsteadOfUrls) {
-            var self=this;
-            if (!url || url.length == 0) {
-                logger.error("missing url ");
-                return Promise.reject();
-            }
-            if (className == undefined) {
-                className = this.getImageCssClassName(url);
-            }
-            if (className.length > 0) {
-                var promise = (!!useImageInsteadOfUrls) ? this.getEntityImageFromUrl(url) : Promise.resolve(url);
-                return promise.then(function(response) {
+        //#endregion
+        /**/
 
-                    if (!self.stylesContainerDiv) {
-                        logger.log("Css container div has not been set");
-                        return false;
-                    }
-                    if (response && response.length > 0) {
-                        var string = '.' + className + '{ background-image:' + self.getCssContentForUrl(response) + ';}';
-                        var styleId = 'entityClass_' + className;
-                        var style = self.stylesContainerDiv.find('#' + styleId);
-                        if (style.length == 0) {
-                            self.stylesContainerDiv.append('<style id="' + styleId + '">' + string
-                                + ';</style>');
+        //#region gathering functions
+        getExternalResource: function (url, binary) {
+            var self = this;
+            var result = { type: "url", data: url };
+            var gatheringFcn = this.__getImageContentGatheringFcn();
+            if (gatheringFcn) {
+                var promise = Promise.resolve(gatheringFcn(url, binary))
+                    .then((response) => {
+                        self.__log("debug", "================> read successful");
+                        if (!response) {
+                            throw new Error("Unexpected empty response for image");
                         } else {
-                            style.html(string);
+                            var data = response.content;
+                            var content = data;
+                            var contentType, charset;
+                            if (data && response.contentType) {
+                                contentType = response.contentType;
+                                content = response.content;
+                                charset = response.charset;
+                            }
+                            return { type: "data", data: content, contentType: contentType, charset: charset };
                         }
-                        return true;
-                    }
-                    return false;
-                });
+                    }).catch((response) => {
+                        self.__log("info", "image read unsuccessful.", response.message || response, (response.statusCode) ? "(Code " + response.statusCode + ")" : "");
+
+                        return result;
+                    });
             } else {
-                return Promise.resolve(false);
+                return Promise.resolve(result);
             }
-        },
-        setCssStyleContainerDiv: function ($div) {
-            this.stylesContainerDiv = $div;
+            return promise;
         }
+        //#endregion
+        /**/
     });
     if (typeof module !== "undefined") {
         module.exports = ImageHandler;

@@ -56,6 +56,24 @@
         setLogger: function (logger) {
             this.logger = logger || window.console;
         },
+        setCredentials: function (user, password) {
+            if (!user) {
+                this.loginCredentials = undefined;
+                return;
+            } else if (this.loginCredentials != undefined) {
+                var cred = this.loginCredentials();
+                if (cred.username == user && cred.password == password) {
+                    return;
+                }
+            }
+            this.loginCredentials = function () {
+                return {
+                    username: user,
+                    password: password,
+                };
+            }
+            this.logger.debug("setting credentials");
+        },
         addParamsToUrl: function (url, paramsObj) {
             if (!paramsObj) {
                 return url;
@@ -86,8 +104,10 @@
                 data['success'] == false) {
                 if ("message" in data && data.message.length > 0) {
                     errorMsg = data.message;
-                    if ("messagedetail" in data && !data.messagedetail.length > 0) {
-                        errorMsg += (": " + data.messagedetail);
+                    if (errorMsg != "Resource not found") {
+                        if ("messagedetail" in data && !data.messagedetail.length > 0) {
+                            errorMsg += (": " + data.messagedetail);
+                        }
                     }
                 } else {
                     errorMsg = "unknown error: " + JSON.stringify(data, null, 10);
@@ -117,7 +137,7 @@
             return this.statusCode;
         }
     });
-    
+
     var DapBaseController = window.Class.extend({
         init: function (restCaller, logger) {
             this.restCaller = restCaller;
@@ -166,12 +186,82 @@
 
             });
         },
-        getResource: function (resourceUri) {
+        post: function (url, json, paramsObj) {
+            var self = this;
+            return new Promise(function (resolve, reject) {
+                try {
+                    self.restCaller.post(
+                        url, json, paramsObj,
+                        function (err, result) {
+                            if (err != null) {
+                                reject(err);
+                            } else {
+                                resolve(result);
+                            }
+
+                        });
+                } catch (e) {
+                    reject(e);
+                }
+
+            });
+        },
+        put: function (url, json, paramsObj) {
+            var self = this;
+            return new Promise(function (resolve, reject) {
+                try {
+                    self.restCaller.put(
+                        url, json, paramsObj,
+                        function (err, result) {
+                            if (err != null) {
+                                reject(err);
+                            } else {
+                                resolve(result);
+                            }
+
+                        });
+                } catch (e) {
+                    reject(e);
+                }
+
+            });
+        },
+        delete: function (url, paramsObj) {
+            var self = this;
+            return new Promise(function (resolve, reject) {
+                try {
+                    self.restCaller.delete(
+                        url, paramsObj,
+                        function (err, result) {
+                            if (err != null) {
+                                reject(err);
+                            } else {
+                                resolve(result);
+                            }
+
+                        });
+                } catch (e) {
+                    reject(e);
+                }
+
+            });
+        },
+        getResource: function (resourceUri, paramsObj) {
             var logger = this.logger;
-            return this.get(resourceUri)
+            return this.get(resourceUri, paramsObj)
                 .then(function (response) {
                     logger.debug("loaded resource " + resourceUri);
-                    return response
+                    let content;
+                    if (!response.contentType) {
+                        content = response;
+                    } else if (response.contentType == "application/json") {
+                        content = response.content;
+                    }
+                    if (content && !Array.isArray(content)) {
+                        content = [content];
+                    }
+
+                    return content;
                 });
         },
         getBinaryResource: function (resourceUri, paramsObj) {
@@ -181,6 +271,39 @@
                     return response
                 })
 
+        },
+        postResource(resource) {
+            var resourceUri = resource["@id"];
+            var resourceType = resource["@type"];
+            if (!resourceUri || !resourceType) {
+                return Promise.reject("Missing id or type in resource " + JSON.stringify(resource));
+            }
+            var url = window.CONSTANTS.PATHS.ROOT;
+            if (resourceUri.startsWith(window.CONSTANTS.PATHS.TYPES + "/")) {
+                url = window.CONSTANTS.PATHS.TYPES;
+            }
+            var self = this;
+            return this.post(url, resource).then(function (response) {
+                self.logger.debug("Sent \"new\" request for resource " + resourceUri);
+                return response;
+            });
+        },
+        putResource: function (resource) {
+            var resourceUri = resource["@id"];
+            var resourceType = resource["@type"];
+            if (!resourceUri || !resourceType) {
+                return Promise.reject("Missing id or type in resource " + JSON.stringify(resource));
+            }
+            var url = window.CONSTANTS.PATHS.ROOT;
+            if (resourceUri.startsWith(window.CONSTANTS.PATHS.TYPES + "/")) {
+                url = window.CONSTANTS.PATHS.TYPES;
+            }
+            var self = this;
+            return this.put(url, resource)
+                .then(function (response) {
+                    self.logger.debug("Updated resource " + resourceUri);
+                    return response;
+                });
         },
         getResourceSelfContained: function (resourceUri, mode) {
             var paramsObj = {};
@@ -193,7 +316,7 @@
             return this.get(resourceUri, paramsObj);
         },
         getResourceField: function (resourceUri, field, contentType) {
-            parmsObj = {
+            var parmsObj = {
                 property: field
             };
             if (contentType) {
@@ -269,6 +392,139 @@
                 throw error;
                 // return undefined;
             })
+        },
+        setCredentials: function (user, password) {
+            this.restCaller.setCredentials(user, password);
+        },
+        getBridgeInstancesByMacAddress: function (macAddress) {
+            if (!macAddress || macAddress.length == 0) {
+                return Promise.resolve(undefined);
+            }
+            return this.getQueryResults("/amtech/system/queries/thingsbytype", {
+                typeUrl: "/amtech/linkeddata/types/composite/entity/amtechM2mBridge",
+                selfContained: "true",
+                "/amtech/system/queries/thingsbytype/constraints": JSON.stringify([{
+                    "@id": "/amtech/system/queries/thingsbytype/constraints/_name",
+                    _name: "_name",
+                    field: "_name",
+                    _fieldUri: "/amtech/linkeddata/types/composite/entity/amtechM2mBridge/_name",
+                    "@type": "/amtech/linkeddata/types/composite/constraint/stringregex",
+                    operator: "regex",
+                    paramsList: [
+                        "regex"
+                    ],
+                    regex: ".*:" + macAddress
+                }])
+            }).then((response) => {
+                let content;
+                if (!response.contentType) {
+                    content = response;
+                } else if (response.contentType == "application/json") {
+                    content = response.content;
+                }
+                if (content && !Array.isArray(content)) {
+                    content = [content];
+                }
+
+                return content;
+            })
+        },
+        getThingsInWkt: function (wkt, tenantToUse) {
+            var options = {
+                "geofence": wkt
+            };
+            if (tenantToUse && tenantToUse.length > 0) {
+                options["/amtech/system/queries/thingswithinwkt/constraints"] = [{
+                    "@type": "/amtech/linkeddata/types/composite/constraint/comparisonstring",
+                    "field": "_tenant",
+                    "_fieldUri": window.CONSTANTS.PATHS.TYPES + "/entity/_tenant",
+                    "operator": "eq",
+                    "value": tenantToUse
+                }]
+            };
+            return this.getQueryResults("/amtech/system/queries/thingswithinwkt", options);
+        },
+        deleteBridgeAndInstances: function (macAddress, tenantToUse) {
+            var self = this;
+            return this.getBridgeInstancesByMacAddress(macAddress).then((response) => {
+                if (!response || !response.length) {
+                    return response
+                } else {
+                    var list = [];
+                    var promises = response.map(function (bridge) {
+                        let newPromise;
+                        let bridgeUri;
+                        let bridgeName;
+                        let bridgeInstances = undefined;
+                        if (typeof bridge == "string") {
+                            bridgeUri = bridge;
+                            bridgeName = bridge.substr(bridge.lastIndexOf("/") + 1);
+                        } else {
+                            bridgeUri = bridge["@id"];
+                            bridgeName = bridge._name;
+                            if (bridge.bridgeInstances && !Array.isArray(bridge.bridgeInstances)) {
+                                bridgeInstances = bridge.bridgeInstances.members;
+                            } else {
+                                bridgeInstances = bridge.bridgeInstances;
+                            }
+                        }
+                        newPromise = self.delete(bridgeUri);
+                        if (bridgeInstances && bridgeInstances.length > 0) {
+                            newPromise = newPromise.then((response) => {
+                                return self.deleteAll(bridgeInstances);
+                            });
+                        }
+                        return newPromise.then((ignored) => {
+                            return self.getQueryResults("/amtech/system/queries/thingsbytype", {
+                                typeUrl: "/amtech/linkeddata/types/composite/entity/geofence",
+                                "/amtech/system/queries/thingsbytype/constraints": JSON.stringify([{
+                                    "@id": "/amtech/system/queries/thingsbytype/constraints/_name",
+                                    _name: "_name",
+                                    field: "_name",
+                                    _fieldUri: "/amtech/linkeddata/types/composite/entity/amtechM2mBridge/_name",
+                                    "@type": "/amtech/linkeddata/types/composite/constraint/stringregex",
+                                    operator: "regex",
+                                    paramsList: [
+                                        "regex"
+                                    ],
+                                    regex: "geofence:" + bridgeName
+                                }])
+                            }).then((geofences) => {
+                                var mapPromises = geofences.map((geofence) => {
+                                    let loc = geofence.location;
+                                    return self.getThingsInWkt(loc.wkt || loc, tenantToUse).then((list) => {
+                                        var geofenceUrl = geofence["@id"];
+                                        var exist = false;
+                                        var i = -1;
+                                        while (!exist && ++i < list.length) {
+                                            exist = list[i]["@id"] == geofenceUrl;
+                                        }
+                                        if (!exist) {
+                                            list.push(geofence);
+                                        }
+                                        return self.deleteAll(list);
+                                    })
+                                });
+                                return Promise.all(mapPromises);
+                            })
+
+                        })
+                    });
+                    return Promise.all(promises);
+                }
+
+            })
+        },
+        deleteAll: function (list) {
+            var self = this;
+            var promiseArray = list.map(function (item) {
+                if (item && typeof item !== "string") {
+                    item = item["@id"];
+                }
+                return (item) ? self.delete(item) : Promise.resolve();
+            });
+
+            return Promise.all(promiseArray);
         }
     });
     var dap = {

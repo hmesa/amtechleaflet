@@ -1,0 +1,19 @@
+{
+  "name": "amtechleaflet",
+  "version": "1.0.0",
+  "description": "Leaflet based components for amtech platform",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hmesa/amtechleaflet.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hmesa/amtechleaflet/issues"
+  },
+  "homepage": "https://github.com/hmesa/amtechleaflet#readme"
+}

@@ -13,6 +13,10 @@
                     this._emitter.emit(type, eventData);
                     return this;
                 },
+                isDefined: function (arg) {
+                    return (typeof arg !== "undefined")
+                        && (arg != null)
+                },
                 addEventListener: function (eventTypes, eventHandler,
                     context) {
                     eventTypes.split().forEach(function (type) {
@@ -152,6 +156,10 @@
                         return false;
                     }
 
+                },
+                isDefined: function (argument) {
+                    return (typeof argument !== "undefined")
+                        && (argument != null)
                 },
                 addEventListener: function (eventTypes, eventHandler,
                     context) {
