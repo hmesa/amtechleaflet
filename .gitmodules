@@ -1,0 +1,6 @@
+[submodule "amtechnodejsdaputils"]
+	path = amtechnodejsdaputils
+	url = git+ssh://git@bitbucket.org/hmesa/amtechnodejsdaputils.git
+[submodule "amtechmaptools"]
+	path = amtechmaptools
+	url = git+ssh://git@bitbucket.org/hmesa/amtechmaptools.git
