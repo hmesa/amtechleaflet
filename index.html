@@ -43,7 +43,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
-    <script type="text/javascript" src="./js/Leaflet.ImageOverlay.Rotated.js"></script>
+    <script type="text/javascript" src="./maptools/src/Leaflet.ImageOverlay.Rotated.js"></script>
 
     <script type="text/javascript" src="./daputils/src/constants.js"></script>
     <script type="text/javascript" src="./daputils/src/logger.js"></script>
@@ -64,7 +64,7 @@
     <script type="text/javascript" src="./maptools/src/control.locateme.js"></script>
     <script type="text/javascript" src="./maptools/src/leafletMap.js"></script>
 
-    <script type="text/javascript" src="./js/auth.js" lang="js"></script>
+  <!--  <script type="text/javascript" src="./js/auth.js" lang="js"></script>-->
 </head>
 
 <body id='mainBody'>
@@ -111,7 +111,7 @@
 
         //map widget creation
         var mapWidget;
-
+        var dap;
         function createMap() {
             var container = $('.map-container').get(0);
             mapWidget = new amtech.console.widget.LeafletMap({
@@ -161,8 +161,11 @@
 
         //dap controller definition
         var dapClient;
+        if (!dap){
+            dap=(amtech&&amtech.dap);
+        }
         function createDapClient() {
-            dapClient = dap.createDapClient(
+            dapClient = amtech.createDapClient(
                 getLogger().withFixExecInfo("DapClient", " : "),
                 config.dapUrl, config.user + "/" + config.tenant, config.password);
         }
